@@ -1,0 +1,32 @@
+
+ 录屏命令：
+ playwright codegen https://sso-uat.gaojihealth.cn/login/#/
+
+看占用 lsof -i :8000
+杀进程 kill -9
+
+激活环境：source 3.11vevn/bin/activate
+
+执行：python  python api-snapshot.py
+
+执行精准营销：python 精准营销创建.py
+
+debug模式：
+PWDEBUG=1 pytest -s 精准营销创建.py
+
+api----------------------------------------------------------------------------------------------------------------
+精准营销创建接口：
+http://127.0.0.1:8000/execute?name=精准营销创建.py
+
+：
+http://127.0.0.1:8000/codegen?url=https://sso-uat.gaojihealth.cn/login/#/
+
+登录账号是 13581791523  登录密码是 Xifan@1007
+
+生成测试报告
+pytest --trace test_example.py
+
+查看测试报告
+playwright show-trace trace.zip
+
+
