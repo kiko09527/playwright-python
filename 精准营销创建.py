@@ -9,8 +9,6 @@ def run(playwright: Playwright) -> None:
     try:
         browser = playwright.chromium.launch(headless=False)
         context = browser.new_context()
-
-        # Start tracing before creating / navigating a page.
         context.tracing.start(screenshots=True, snapshots=True, sources=True)
         page = context.new_page()
         current_file_name = os.path.basename(__file__)
@@ -52,12 +50,6 @@ def run(playwright: Playwright) -> None:
         page1.get_by_role("radio", name="手动定时运营").check()
         page1.get_by_role("radio", name="审核后立即发送").check()
         page1.get_by_role("button", name="图标: edit 查看维系渠道及内容").click()
-
-        # page1.get_by_text("发短信").click()
-        # page1.get_by_role("button", name="图标: plus 选择短信模板").click()
-        # page1.get_by_role("row", name="大促活动 审核通过 2025-02-08 15:57:19").get_by_label("").check()
-        # page1.get_by_label("选择短信模板").get_by_role("button", name="确定").click()
-        # page1.get_by_role("button", name="确定").click()
 
         page1.get_by_text("发图文").click()
         page1.get_by_role("row", name="五一调休，本周日上班 2023-11-29 16:25:").get_by_label("").check()
