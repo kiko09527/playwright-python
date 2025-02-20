@@ -5,7 +5,6 @@ import time
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-# requests = []
 responses = []
 
 # 数据库连接配置
@@ -75,40 +74,45 @@ def log_response(response, filtered_apis=None, need_api=None, current_file_name=
             "request_post_data": response.request.post_data,
             "url": response.url,
             "status": response.status,
-            "body": response.body().decode('utf-8')
+            "body": response.body().decode('utf-8'),
+            "response_header": response.headers
         }
         logger.info(f"log_response 记录响应结果|url:{response.url}已记录响应")
-        # 将响应数据临时存储
-        responses.append(response_data)
         # 将响应数据保存到数据库
-        save_to_database(responses,current_file_name)
-        responses.clear()  # 清空列表
+        save_to_database(response_data, current_file_name, unique_code)
     except Exception as e:
         logger.error(f"log_response|处理服务异常{e}")
         pass
 
 
-def save_to_database(data_list,current_file_name):
+def save_to_database(data, current_file_name, unique_code):
     try:
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
         # 删除基于 script_name 的所有记录,只保存最新的
-        delete_query = "DELETE FROM log_http WHERE script_name = %s"
-        cursor.execute(delete_query, (current_file_name,))
+        delete_query = "DELETE FROM log_http WHERE script_name = %s and unique_code!=%s"
+        cursor.execute(delete_query, (current_file_name, unique_code,))
 
         # 提交删除操作
         connection.commit()
 
         insert_query = """
-            INSERT INTO log_http (script_name, unique_code, url, headers, post_data, method, status, body)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO log_http (script_name, unique_code, url, headers, post_data, method, status, body,response_header)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s,%s)
         """
         # 批量插入
-        cursor.executemany(insert_query, [
-            (data['script_name'], data['unique_code'], data['url'], data['header'],
-             data['request_post_data'], data['method'], data['status'], data['body'])
-            for data in data_list
-        ])
+        # 插入单个数据对象
+        cursor.execute(insert_query, (
+            data['script_name'],
+            data['unique_code'],
+            data['url'],
+            data['header'],
+            data['request_post_data'],
+            data['method'],
+            data['status'],
+            data['body'],
+            json.dumps(data['response_header'])
+        ))
         connection.commit()
     except Exception as e:
         logger.error(f"save_to_database|数据库操作异常: {e}")
@@ -120,37 +124,44 @@ def save_to_database(data_list,current_file_name):
 
 
 def get_api_fifter(current_file_name):
-    # 从数据库获取 filtered_apis 和 need_api
-    connection = mysql.connector.connect(**db_config)
-    cursor = connection.cursor(dictionary=True)
-    # 这里的 SQL 查询可以根据需要进行调整
-    cursor.execute("SELECT need_api, filtered_apis FROM script_info WHERE script_name = %s", (current_file_name,))
-    result = cursor.fetchone()
-    cursor.close()
-    connection.close()
-    if result:
-        filtered_apis_json = result['filtered_apis']
-        if filtered_apis_json:
-            try:
-                # 解析 JSON 并转换为集合
-                filtered_apis = set(json.loads(filtered_apis_json))
-            except json.JSONDecodeError:
-                # 如果解析失败，返回空集合
+    try:
+        # 从数据库获取 filtered_apis 和 need_api
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        # 这里的 SQL 查询可以根据需要进行调整
+        cursor.execute("SELECT need_api, filtered_apis FROM script_info WHERE script_name = %s", (current_file_name,))
+        result = cursor.fetchone()
+        cursor.close()
+        connection.close()
+        if result:
+            filtered_apis_json = result['filtered_apis']
+            if filtered_apis_json:
+                try:
+                    # 解析 JSON 并转换为集合
+                    filtered_apis = set(json.loads(filtered_apis_json))
+                except json.JSONDecodeError:
+                    # 如果解析失败，返回空集合
+                    filtered_apis = set()
+            else:
+                # 如果 filtered_apis 为空字符串，返回空集合
                 filtered_apis = set()
-        else:
-            # 如果 filtered_apis 为空字符串，返回空集合
-            filtered_apis = set()
 
-        return filtered_apis, result['need_api']
-    return None, None
+            return filtered_apis, result['need_api']
+        return None, None
+    except Exception as e:
+        logger.error(f"get_api_fifter|服务异常 current_file_name:{current_file_name},异常{e}")
+        pass
 
 
 # 创建新页面并绑定监听器
 def setup_page(page, current_file_name, unique_code):
-    logger.info(f"setup_page|请求参数 current_file_name:{current_file_name},unique_code:{unique_code}")
-    current_file_name = current_file_name.replace(".py", "")
-    filtered_apis, need_api = get_api_fifter(current_file_name)
-    # 绑定请求监听器，传递过滤接口和记录的 API URL
-    # page.on("request", lambda request: log_request(request, filtered_apis, need_api, current_file_name, unique_code))
-    page.on("response", lambda response: log_response(response, filtered_apis, need_api, current_file_name,
-                                                      unique_code))  # 设置响应的监听器
+    try:
+        logger.info(f"setup_page|请求参数 current_file_name:{current_file_name},unique_code:{unique_code}")
+        current_file_name = current_file_name.replace(".py", "")
+        filtered_apis, need_api = get_api_fifter(current_file_name)
+        # 绑定请求监听器，传递过滤接口和记录的 API URL
+        # page.on("request", lambda request: log_request(request, filtered_apis, need_api, current_file_name, unique_code))
+        page.on("response", lambda response: log_response(response, filtered_apis, need_api, current_file_name,
+                                                          unique_code))  # 设置响应的监听器
+    except Exception as e:
+        logger.error(f"setup_page|服务异常 current_file_name:{current_file_name},unique_code:{unique_code},{e}")
