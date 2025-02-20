@@ -76,7 +76,7 @@ def codegen(url: str):
 
         # 检查命令是否成功执行
         if process.returncode != 0:
-            return create_response(False, "error.", None)  # 返回404错误
+            return create_response(False, "Script execution failed", None)  # 返回404错误
 
         # 返回生成的代码
         return create_response(True, "generated_code successfully.", process.stdout.strip())  # 返回成功响应

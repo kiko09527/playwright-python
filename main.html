@@ -246,12 +246,57 @@
             background-color: #1ba37f;
         }
 
+        .script-gen-box {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 10px;
+        }
+
+        .script-url-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+        }
+
+        .generate-btn {
+            background-color: #6610f2;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+        }
+
+        .generate-btn:hover {
+            background-color: #520dc2;
+        }
+
     </style>
 </head>
 <body>
 <div class="container">
     <h1>生成 Python 文件</h1>
-    <form id="uploadForm" action="http://127.0.0.1:8001/upload" method="post">
+    
+    <!-- 新增获取脚本区域 -->
+    <div class="script-gen-box">
+        <input 
+            type="text" 
+            id="scriptUrl" 
+            placeholder="请输入URL..."
+            class="script-url-input"
+        >
+        <button id="generateScript" class="generate-btn">获取脚本</button>
+    </div>
+
+    <form id="uploadForm" action="http://127.0.0.1:8000/api/upload" method="post">
         <label for="filename">文件名称:</label>
         <input type="text" name="filename" placeholder="请输入脚本名称" required><br><br>
 
@@ -551,6 +596,47 @@
             alert('获取报告失败：' + error.message);
         }
     }
+
+    // 获取脚本功能
+    document.getElementById('generateScript').addEventListener('click', async () => {
+        const url = document.getElementById('scriptUrl').value.trim();
+        
+        if (!url) {
+            alert('请输入URL');
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/api/codegen?url=${encodeURIComponent(url)}`);
+            if (!response.ok) {
+                throw new Error('网络请求失败');
+            }
+            
+            const result = await response.json();
+            
+            // 根据返回的 success 状态显示对应的消息
+            if (result.success) {
+                alert('获取脚本成功：' + result.message);
+                // 成功后清空输入框
+                document.getElementById('scriptUrl').value = '';
+                // 刷新脚本列表
+                loadScripts(true);
+            } else {
+                alert('获取脚本失败：' + result.message);
+            }
+            
+        } catch (error) {
+            console.error('获取脚本失败:', error);
+            alert('获取脚本失败：' + error.message);
+        }
+    });
+
+    // 为URL输入框添加回车事件
+    document.getElementById('scriptUrl').addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            document.getElementById('generateScript').click();
+        }
+    });
 </script>
 </body>
 </html>
