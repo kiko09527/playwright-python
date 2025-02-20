@@ -30,3 +30,7 @@ pytest --trace test_example.py
 playwright show-trace trace.zip
 
 
+联合启动方式
+uvicorn start:app --reload
+
+
