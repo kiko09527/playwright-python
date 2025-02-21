@@ -498,6 +498,59 @@
         .generate-btn:hover {
             background-color: #520dc2;
         }
+
+        .api-list {
+            margin: 8px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .api-item {
+            display: flex;
+            align-items: center;
+            padding: 4px 0;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .api-bullet {
+            color: var(--primary-color);
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .api-text {
+            font-family: monospace;
+            background-color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+            flex: 1;
+        }
+
+        .no-data {
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .api-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .api-tag {
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            display: inline-block;
+            border: 1px solid #dee2e6;
+        }
     </style>
 </head>
 <body>
@@ -636,7 +689,7 @@
             scriptElement.innerHTML = `
                 <h3 style="color: var(--primary-color); margin: 0 0 10px 0;">${script.script_name}</h3>
                 <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px;">
-                    <span style="color: #666;">最近一次执行状态:</span>
+                    <span style="color: #666;">最近一次执行结果:</span>
                     <span style="color: ${
                         script.last_exec_status 
                             ? (script.last_exec_status.includes('失败') || script.last_exec_status.includes('异常')
@@ -649,12 +702,29 @@
                     }">${script.last_exec_status || '暂无'}</span>
                     <span style="color: #666;">执行时间间隔(分钟):</span>
                     <span>${script.execute_time || '暂无'}</span>
-                    <span style="color: #666;">过滤请求前缀:</span>
+                    <span style="color: #666;">请求URL匹配:</span>
                     <span>${script.need_api}</span>
-                    <span style="color: #666;">需要的API集合:</span>
-                    <span>${script.filtered_apis || '暂无'}</span>
-                    <span style="color: #666;">过滤的API集合:</span>
-                    <span>${script.delete_apis || '暂无'}</span>
+
+                    <span style="color: #666; height: 31px; line-height: 31px; margin: 8px 0;">需要的API集合:</span>
+                    <div class="api-tags">
+                        ${
+                            script.filtered_apis 
+                                ? script.filtered_apis.split('|')
+                                    .map(api => `<span class="api-tag">${api.trim()}</span>`)
+                                    .join('')
+                                : '<span class="no-data">暂无</span>'
+                        }
+                    </div>
+                    <span style="color: #666; height: 31px; line-height: 31px; margin: 8px 0;">过滤的API集合:</span>
+                    <div class="api-tags">
+                        ${
+                            script.delete_apis 
+                                ? script.delete_apis.split('|')
+                                    .map(api => `<span class="api-tag">${api.trim()}</span>`)
+                                    .join('')
+                                : '<span class="no-data">暂无</span>'
+                        }
+                    </div>
                     <span style="color: #666;">创建时间:</span>
                     <span>${formatDateTime(script.create_time)}</span>
                     <span style="color: #666;">更新时间:</span>

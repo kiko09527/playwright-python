@@ -40,7 +40,7 @@ def save_script_log(script_name, post_data, mode, status, msg):
         # 获取新插入记录的 ID
         log_id = cursor.lastrowid  # 获取最后插入记录的自增 ID
 
-        logger.info(f"save_script_log|执行成功, log_id: {log_id}")
+        logger.info(f"save_script_log|保存成功, log_id: {log_id} status:{status}")
         return log_id
 
     except mysql.connector.Error as e:
@@ -60,7 +60,7 @@ def save_script_log(script_name, post_data, mode, status, msg):
 
 
 def update_script_execute_log(script_id, new_status, new_msg,script_name):
-    logger.error(f"update_script_execute_log|修改状态new_status: {new_status}")
+    logger.info(f"update_script_execute_log|请求参数 new_status: {new_status}")
     # 去掉 .py 后缀如果存在
     if script_name.endswith('.py'):
         script_name = script_name[:-3]

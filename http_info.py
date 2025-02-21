@@ -61,7 +61,6 @@ def log_response(response, delete_apis=None,filtered_apis=None, need_api=None, c
         if need_api not in response.url:
             # logger.warning(f"log_response 首次次校验不通过|url:{response.url}跳过记录")
             return  # 直接返回，不记录任何内容
-
         # 如果 delete_apis 不为空，并且 response.url 包含其中任意一项，则直接返回
         if delete_apis and any(api in response.url for api in delete_apis):
             return  # 不记录任何内容
