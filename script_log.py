@@ -59,8 +59,11 @@ def save_script_log(script_name, post_data, mode, status, msg):
             connection.close()
 
 
-def update_script_execute_log(script_id, new_status, new_msg):
+def update_script_execute_log(script_id, new_status, new_msg,script_name):
     logger.error(f"update_script_execute_log|修改状态new_status: {new_status}")
+    # 去掉 .py 后缀如果存在
+    if script_name.endswith('.py'):
+        script_name = script_name[:-3]
     connection = None
     cursor = None
     try:
@@ -70,11 +73,19 @@ def update_script_execute_log(script_id, new_status, new_msg):
         # 更新状态和消息的 SQL 查询
         update_query = """
             UPDATE script_execute_log 
-            SET status = %s, msg = %s, update_time = NOW() 
+            SET status = %s, msg = %s
             WHERE id = %s
         """
         # 执行更新操作
         cursor.execute(update_query, (new_status, json.dumps(new_msg), script_id))
+
+        # 更新 script_info 表的 last_exec_status
+        update_info_query = """
+            UPDATE script_info 
+            SET last_exec_status = %s
+            WHERE script_name = %s
+        """
+        cursor.execute(update_info_query, (new_status, script_name))
 
         # 提交更新操作
         connection.commit()

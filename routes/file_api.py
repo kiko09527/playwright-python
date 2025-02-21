@@ -103,14 +103,14 @@ def execute_script(name: str):
     # 检查文件是否存在
     if not os.path.isfile(script_path):
         logger.error(f"execute_script|文件不存在log_id:{log_id}")
-        update_script_execute_log(log_id, "执行失败", "Script does not exist in the current directory")
+        update_script_execute_log(log_id, "执行失败", "Script does not exist in the current directory",name)
         return create_response(False, "Script does not exist in the current directory.", None)  # 返回404错误
 
     try:
         # 使用subprocess运行外部python脚本
         result = subprocess.run(['python', script_path], capture_output=True, text=True, check=True)
         output = result.stdout.strip()
-        update_script_execute_log(log_id, "执行成功", "Script executed successfully.")
+        update_script_execute_log(log_id, "执行成功", "Script executed successfully.",name)
         logger.error(f"execute_script|执行成功{output}")
         return create_response(True, "Script executed successfully.", output)  # 返回成功响应
     except Exception as e:
@@ -120,7 +120,7 @@ def execute_script(name: str):
             "error": str(e)
         }
         error_message_json = json.dumps(error_message)  # 转换为 JSON 字符串
-        update_script_execute_log(log_id, "执行失败", error_message_json)
+        update_script_execute_log(log_id, "执行失败", error_message_json,name)
         logger.error(f"execute_script|服务异常{e}")
         return create_response(False, f"Script execution failed: {e.stderr.strip()}", None)
 
