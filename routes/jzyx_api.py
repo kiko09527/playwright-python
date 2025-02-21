@@ -92,8 +92,8 @@ def run(playwright: Playwright, request: PromotionRequest) -> bool:
         context.close()
         browser.close()
 
-@app.post("/jzyx/create", response_model=PromotionResponse)
-def create_promotion(request: PromotionRequest):
+@app.post("/execute", response_model=PromotionResponse)
+def execute(request: PromotionRequest):
     with sync_playwright() as playwright:
         success = run(playwright, request)
     return PromotionResponse(success=success)

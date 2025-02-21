@@ -1,6 +1,8 @@
-from fastapi import FastAPI, Request, UploadFile, File, HTTPException, Query, Path
+from fastapi import FastAPI, HTTPException, Query, Path
 from fastapi.responses import JSONResponse
 import subprocess
+import json
+from script_log import save_script_log, update_script_execute_log
 from pydantic import BaseModel
 import os
 import logging
@@ -90,28 +92,38 @@ def codegen(url: str):
 def execute_script(name: str):
     if not name:
         return create_response(False, "No script name provided.", None)  # 返回400
-
+    log_id = save_script_log(name, "无",  "脚本","正在执行..","脚本正在执行,请耐心等候")  # 保存日志
     # 获取当前工作目录
     current_directory = os.getcwd()
-
     # 确保脚本名是以 '.py' 结尾
     if not name.endswith('.py'):
         name += '.py'  # 自动添加 '.py' 后缀
 
     script_path = os.path.join(current_directory, name)
-
     # 检查文件是否存在
     if not os.path.isfile(script_path):
+        logger.error(f"execute_script|文件不存在log_id:{log_id}")
+        update_script_execute_log(log_id, "执行失败", "Script does not exist in the current directory")
         return create_response(False, "Script does not exist in the current directory.", None)  # 返回404错误
 
     try:
         # 使用subprocess运行外部python脚本
         result = subprocess.run(['python', script_path], capture_output=True, text=True, check=True)
         output = result.stdout.strip()
+        update_script_execute_log(log_id, "执行成功", "Script executed successfully.")
+        logger.error(f"execute_script|执行成功{output}")
         return create_response(True, "Script executed successfully.", output)  # 返回成功响应
     except Exception as e:
+        # 将错误信息转换为 JSON 字符串
+        error_message = {
+            "stderr": e.stderr.strip() if e.stderr else None,
+            "error": str(e)
+        }
+        error_message_json = json.dumps(error_message)  # 转换为 JSON 字符串
+        update_script_execute_log(log_id, "执行失败", error_message_json)
         logger.error(f"execute_script|服务异常{e}")
         return create_response(False, f"Script execution failed: {e.stderr.strip()}", None)
+
 
 @app.get("/showTrace", summary="显示 Playwright 跟踪报告")
 def show_trace(trace: str):
@@ -139,6 +151,7 @@ def show_trace(trace: str):
     except Exception as e:
         logger.error(f"show_trace|服务异常{e}")
         return create_response(False, f"Trace display failed: {e.stderr.strip()}", None)
+
 
 @app.get("/debug", summary="执行 文件 debug模式")
 def run_pytest(trace: str):
@@ -168,6 +181,8 @@ def run_pytest(trace: str):
     except Exception as e:
         logger.error(f"run_pytest|服务异常{e}")
         return create_response(False, f"Pytest execution failed: {e.stderr.strip()}", None)
+
+
 @app.post("/upload", summary="生成脚本文件")
 def upload_code(filename: str, code: str):
     if not filename.endswith('.py'):
@@ -288,6 +303,10 @@ async def update_script(
 
         if update_data.filtered_apis is not None:
             updates.append("filtered_apis = %s")
+            params.append(update_data.filtered_apis)
+
+        if update_data.filtered_apis is not None:
+            updates.append("delete_apis = %s")
             params.append(update_data.filtered_apis)
 
         # 如果没有字段需要更新，则抛出异常

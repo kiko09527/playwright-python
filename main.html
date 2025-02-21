@@ -279,6 +279,20 @@
             background-color: #520dc2;
         }
 
+        .api-btn {
+            background-color: #9c27b0;  /* 使用紫色来区分其他按钮 */
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .api-btn:hover {
+            background-color: #7b1fa2;
+        }
+
     </style>
 </head>
 <body>
@@ -338,12 +352,15 @@
             <label for="modalExecuteTime">执行时间:</label>
             <input type="text" id="modalExecuteTime">
             
-            <label for="modalNeedApi">需要API:</label>
+            <label for="modalNeedApi">过滤请求前缀:</label>
             <input type="text" id="modalNeedApi">
             
-            <label for="modalFilteredApis">过滤的API:</label>
+            <label for="modalFilteredApis">需要的API集合:</label>
             <input type="text" id="modalFilteredApis">
-            
+
+            <label for="modalDeleteApis">过滤的API集合:</label>
+            <input type="text" id="modalDeleteApis">
+
             <button type="submit" class="save-btn">保存</button>
         </form>
     </div>
@@ -388,10 +405,12 @@
                 <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px;">
                     <span style="color: #666;">执行时间:</span>
                     <span>${script.execute_time || '未执行'}</span>
-                    <span style="color: #666;">需要 API:</span>
+                    <span style="color: #666;">过滤请求前缀:</span>
                     <span>${script.need_api}</span>
-                    <span style="color: #666;">过滤的 API:</span>
+                    <span style="color: #666;">需要的API集合:</span>
                     <span>${script.filtered_apis || '无'}</span>
+                    <span style="color: #666;">过滤的API集合:</span>
+                    <span>${script.delete_apis || '无'}</span>
                     <span style="color: #666;">创建时间:</span>
                     <span>${script.create_time}</span>
                     <span style="color: #666;">更新时间:</span>
@@ -401,7 +420,8 @@
                     <button class="execute-btn" onclick="executeScript('${script.script_name}')">执行</button>
                     <button class="debug-btn" onclick="debugScript('${script.script_name}')">Debug</button>
                     <button class="report-btn" onclick="showReport('${script.script_name}')">显示报告</button>
-                    <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}')">设置</button>
+                    <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}','${script.delete_apis || ''}')">设置</button>
+                    <button class="api-btn" onclick="openApiDocs('${script.script_name}')">API执行</button>
                 </div>
             `;
             scriptDataDiv.appendChild(scriptElement);
@@ -496,6 +516,7 @@
         document.getElementById('modalExecuteTime').value = executeTime;
         document.getElementById('modalNeedApi').value = needApi;
         document.getElementById('modalFilteredApis').value = filteredApis;
+        document.getElementById('modalDeleteApis').value = filteredApis;
         modal.style.display = 'block';
     }
 
@@ -520,7 +541,8 @@
             script_name: document.getElementById('modalScriptName').value,
             execute_time: document.getElementById('modalExecuteTime').value,
             need_api: document.getElementById('modalNeedApi').value,
-            filtered_apis: document.getElementById('modalFilteredApis').value
+            filtered_apis: document.getElementById('modalFilteredApis').value,
+            delete_apis: document.getElementById('modalDeleteApis').value
         };
 
         try {
@@ -637,6 +659,12 @@
             document.getElementById('generateScript').click();
         }
     });
+
+    // 打开API文档
+    function openApiDocs(scriptName) {
+        const url = `http://127.0.0.1:8000/${scriptName}/docs#/default/execute_execute_post`;
+        window.open(url, '_blank');
+    }
 </script>
 </body>
 </html>
