@@ -386,6 +386,62 @@ async def update_script(
         if connection:
             connection.close()
 
+@app.get("/queryLogHttpList", response_model=dict, summary="查询 HTTP 接口列表")
+async def query_log_http_list(
+        page: int = Query(1, ge=1),
+        page_size: int = Query(10, ge=1),
+        script_name: Optional[str] = Query(None, title="脚本名称", description="可选脚本名称进行模糊匹配")
+):
+    connection = None
+    cursor = None
+    try:
+        offset = (page - 1) * page_size
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+
+        # 构建查询
+        query = "SELECT * FROM log_http WHERE TRUE"
+        params = []
+
+        # 如果提供了脚本名称，添加到查询条件
+        if script_name:
+            query += " AND script_name LIKE %s"
+            params.append(f"%{script_name}%")
+
+        # 按创建时间倒序排列
+        query += " ORDER BY create_time DESC"
+
+        query += " LIMIT %s OFFSET %s"
+        params.append(page_size)
+        params.append(offset)
+
+        # 查询数据
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+
+        # 获取总记录数
+        count_query = "SELECT COUNT(*) as total FROM log_http WHERE TRUE"
+        if script_name:
+            count_query += " AND script_name LIKE %s"
+
+        cursor.execute(count_query, [f"%{script_name}%"] if script_name else [])
+        total_count = cursor.fetchone()['total']
+
+        return {
+            'total': total_count,
+            'page': page,
+            'page_size': page_size,
+            'data': rows
+        }
+
+    except Exception as e:
+        logger.error(f"query_log_http_list|服务异常: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 @app.get("/", summary="根文件")
 def read_root():

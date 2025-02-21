@@ -382,6 +382,122 @@
             max-height: none;
             overflow: visible;
         }
+
+        .api-list-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .api-list-btn:hover {
+            background-color: var(--primary-color);
+        }
+
+        .api-item {
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            background-color: #fff;
+            transition: transform 0.2s;
+        }
+
+        .api-item.error {
+            border-color: #dc3545;
+            background-color: #fff5f5;
+        }
+
+        .api-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .api-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .api-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .api-status.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .api-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .api-details {
+            display: grid;
+            gap: 12px;
+        }
+
+        .api-detail-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .copy-btn {
+            background-color: #6c757d;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .copy-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .copy-btn.copied {
+            background-color: #28a745;
+        }
+
+        .script-gen-box {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 10px;
+        }
+
+        .generate-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+            min-width: fit-content;
+        }
+
+        .generate-btn:hover {
+            background-color: #520dc2;
+        }
     </style>
 </head>
 <body>
@@ -469,6 +585,20 @@
     </div>
 </div>
 
+<!-- 添加接口列表模态框 -->
+<div id="apiModal" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+        <span class="close-modal" onclick="closeApiModal()">&times;</span>
+        <h2>接口列表</h2>
+        <div id="apiList"></div>
+        <div class="pagination">
+            <button id="apiPrevPage" onclick="changeApiPage(-1)">上一页</button>
+            <span id="apiPageInfo">第 1 页</span>
+            <button id="apiNextPage" onclick="changeApiPage(1)">下一页</button>
+        </div>
+    </div>
+</div>
+
 <script>
     let currentPage = 1;
     const pageSize = 10;
@@ -526,17 +656,18 @@
                     <span style="color: #666;">过滤的API集合:</span>
                     <span>${script.delete_apis || '暂无'}</span>
                     <span style="color: #666;">创建时间:</span>
-                    <span>${script.create_time}</span>
+                    <span>${formatDateTime(script.create_time)}</span>
                     <span style="color: #666;">更新时间:</span>
-                    <span>${script.update_time}</span>
+                    <span>${formatDateTime(script.update_time)}</span>
                 </div>
                 <div class="action-buttons">
                     <button class="execute-btn" onclick="executeScript('${script.script_name}')">执行</button>
                     <button class="debug-btn" onclick="debugScript('${script.script_name}')">Debug</button>
                     <button class="report-btn" onclick="showReport('${script.script_name}')">显示报告</button>
-                    <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}','${script.delete_apis || ''}')">设置</button>
                     <button class="api-btn" onclick="openApiDocs('${script.script_name}')">API执行</button>
                     <button class="log-btn" onclick="showLogs('${script.script_name}')">执行日志</button>
+                    <button class="api-list-btn" onclick="showApiList('${script.script_name}')">接口列表</button>
+                    <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}','${script.delete_apis || ''}')">设置</button>
                 </div>
             `;
             scriptDataDiv.appendChild(scriptElement);
@@ -847,8 +978,8 @@
                 <div class="log-details">
                     <div data-label="执行模式:">${log.mode}</div>
                     <div data-label="执行信息:">${log.msg}</div>
-                    <div data-label="创建时间:">${log.create_time}</div>
-                    <div data-label="更新时间:">${log.update_time}</div>
+                    <div data-label="创建时间:">${formatDateTime(log.create_time)}</div>
+                    <div data-label="更新时间:">${formatDateTime(log.update_time)}</div>
                 </div>
             `;
             logList.appendChild(logItem);
@@ -869,6 +1000,158 @@
             currentLogPage = newPage;
             await fetchLogs();
         }
+    }
+
+    // 接口列表相关变量
+    let currentApiPage = 1;
+    let currentScriptNameForApi = '';
+    let totalApiPages = 0;
+    const apiPageSize = 10;
+
+    // 显示接口列表
+    async function showApiList(scriptName) {
+        currentApiPage = 1;
+        currentScriptNameForApi = scriptName;
+        document.getElementById('apiModal').style.display = 'flex';
+        await fetchApiList();
+    }
+
+    // 关闭接口列表模态框
+    function closeApiModal() {
+        document.getElementById('apiModal').style.display = 'none';
+    }
+
+    // 获取接口列表数据
+    async function fetchApiList() {
+        try {
+            const response = await fetch(
+                `http://127.0.0.1:8000/api/queryLogHttpList?page=${currentApiPage}&page_size=${apiPageSize}&script_name=${encodeURIComponent(currentScriptNameForApi)}`
+            );
+            
+            if (!response.ok) {
+                throw new Error('获取接口列表失败');
+            }
+
+            const result = await response.json();
+            totalApiPages = Math.ceil(result.total / apiPageSize);
+            renderApiList(result);
+            updateApiPagination();
+        } catch (error) {
+            console.error('获取接口列表失败:', error);
+            alert('获取接口列表失败：' + error.message);
+        }
+    }
+
+    // 渲染接口列表
+    function renderApiList(data) {
+        const apiList = document.getElementById('apiList');
+        apiList.innerHTML = '';
+
+        data.data.forEach(api => {
+            const apiItem = document.createElement('div');
+            apiItem.className = `api-item ${api.status !== 200 ? 'error' : ''}`;
+            apiItem.innerHTML = `
+                <div class="api-header">
+                    <span class="api-name">${api.script_name}</span>
+                    <span class="api-status ${api.status === 200 ? 'success' : 'error'}">
+                        状态码: ${api.status}
+                    </span>
+                </div>
+                <div class="api-details">
+                    <div class="api-detail-row">
+                        <span>唯一标识:</span>
+                        <span>${api.unique_code}</span>
+                    </div>
+                    <div class="api-detail-row">
+                        <span>请求URL:</span>
+                        <span>${api.url}</span>
+                    </div>
+                    <div class="api-detail-row">
+                        <span>请求方式:</span>
+                        <span>${api.method}</span>
+                    </div>
+                    <div class="api-detail-row">
+                        <span>POST请求参数:</span>
+                        <span>${api.post_data}</span>
+                    </div>
+                    <div class="api-detail-row">
+                        <span>请求头:</span>
+                        <button class="copy-btn" onclick="copyContent('${encodeURIComponent(api.headers)}', this)">复制请求头</button>
+                    </div>
+                    <div class="api-detail-row">
+                        <span>响应体:</span>
+                        <button class="copy-btn" onclick="copyContent('${encodeURIComponent(api.body)}', this)">复制响应体</button>
+                    </div>
+                    <div class="api-detail-row">
+                        <span>响应头:</span>
+                        <button class="copy-btn" onclick="copyContent('${encodeURIComponent(api.response_header)}', this)">复制响应头</button>
+                    </div>
+                    <div class="api-detail-row">
+                        <span>创建时间:</span>
+                        <span>${formatDateTime(api.create_time)}</span>
+                    </div>
+                    <div class="api-detail-row">
+                        <span>更新时间:</span>
+                        <span>${formatDateTime(api.update_time)}</span>
+                    </div>
+                </div>
+            `;
+            apiList.appendChild(apiItem);
+        });
+    }
+
+    // 复制内容功能
+    async function copyContent(content, button) {
+        try {
+            const decodedContent = decodeURIComponent(content);
+            await navigator.clipboard.writeText(decodedContent);
+            button.textContent = '已复制';
+            button.classList.add('copied');
+            setTimeout(() => {
+                button.textContent = '复制';
+                button.classList.remove('copied');
+            }, 2000);
+        } catch (err) {
+            console.error('复制失败:', err);
+            alert('复制失败');
+        }
+    }
+
+    // 更新分页信息
+    function updateApiPagination() {
+        document.getElementById('apiPageInfo').textContent = `第 ${currentApiPage} 页 / 共 ${totalApiPages} 页`;
+        document.getElementById('apiPrevPage').disabled = currentApiPage === 1;
+        document.getElementById('apiNextPage').disabled = currentApiPage === totalApiPages;
+    }
+
+    // 切换页面
+    async function changeApiPage(delta) {
+        const newPage = currentApiPage + delta;
+        if (newPage >= 1 && newPage <= totalApiPages) {
+            currentApiPage = newPage;
+            await fetchApiList();
+        }
+    }
+
+    // 点击模态框外部关闭
+    window.onclick = function(event) {
+        const apiModal = document.getElementById('apiModal');
+        if (event.target == apiModal) {
+            closeApiModal();
+        }
+    }
+
+    // 添加时间格式化函数
+    function formatDateTime(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     }
 </script>
 </body>
