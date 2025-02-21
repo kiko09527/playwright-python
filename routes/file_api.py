@@ -9,8 +9,18 @@ import logging
 import genera_python_code
 import mysql.connector
 from typing import Optional
+from fastapi.middleware.cors import CORSMiddleware
+import httpx  # 用于发送 HTTP 请求
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 可以根据需要设置允许的源
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # 设置文件上传目录为项目根目录
 UPLOAD_FOLDER = os.getcwd()  # 根目录
@@ -92,7 +102,7 @@ def codegen(url: str):
 def execute_script(name: str):
     if not name:
         return create_response(False, "No script name provided.", None)  # 返回400
-    log_id = save_script_log(name, "无",  "脚本","正在执行..","脚本正在执行,请耐心等候")  # 保存日志
+    log_id = save_script_log(name, "无", "脚本", "正在执行..", "脚本正在执行,请耐心等候")  # 保存日志
     # 获取当前工作目录
     current_directory = os.getcwd()
     # 确保脚本名是以 '.py' 结尾
@@ -103,26 +113,20 @@ def execute_script(name: str):
     # 检查文件是否存在
     if not os.path.isfile(script_path):
         logger.error(f"execute_script|文件不存在log_id:{log_id}")
-        update_script_execute_log(log_id, "执行失败", "Script does not exist in the current directory",name)
+        update_script_execute_log(log_id, "执行失败", "Script does not exist in the current directory", name)
         return create_response(False, "Script does not exist in the current directory.", None)  # 返回404错误
 
     try:
         # 使用subprocess运行外部python脚本
         result = subprocess.run(['python', script_path], capture_output=True, text=True, check=True)
         output = result.stdout.strip()
-        update_script_execute_log(log_id, "执行成功", "Script executed successfully.",name)
+        update_script_execute_log(log_id, "执行成功", "Script executed successfully.", name)
         logger.error(f"execute_script|执行成功{output}")
         return create_response(True, "Script executed successfully.", output)  # 返回成功响应
     except Exception as e:
-        # 将错误信息转换为 JSON 字符串
-        error_message = {
-            "stderr": e.stderr.strip() if e.stderr else None,
-            "error": str(e)
-        }
-        error_message_json = json.dumps(error_message)  # 转换为 JSON 字符串
-        update_script_execute_log(log_id, "执行失败", error_message_json,name)
+        update_script_execute_log(log_id, "执行失败", str(e), name)
         logger.error(f"execute_script|服务异常{e}")
-        return create_response(False, f"Script execution failed: {e.stderr.strip()}", None)
+        return create_response(False, f"Script execution failed: {str(e)}", None)
 
 
 @app.get("/showTrace", summary="显示 Playwright 跟踪报告")
@@ -150,7 +154,7 @@ def show_trace(trace: str):
         return create_response(True, "Trace displayed successfully.", output)  # 返回成功响应
     except Exception as e:
         logger.error(f"show_trace|服务异常{e}")
-        return create_response(False, f"Trace display failed: {e.stderr.strip()}", None)
+        return create_response(False, f"Trace display failed: {str(e)}", None)
 
 
 @app.get("/debug", summary="执行 文件 debug模式")
@@ -180,7 +184,7 @@ def run_pytest(trace: str):
         return create_response(True, "Pytest executed successfully.", output)  # 返回成功响应
     except Exception as e:
         logger.error(f"run_pytest|服务异常{e}")
-        return create_response(False, f"Pytest execution failed: {e.stderr.strip()}", None)
+        return create_response(False, f"Pytest execution failed: {str(e)}", None)
 
 
 @app.post("/upload", summary="生成脚本文件")
@@ -267,6 +271,7 @@ async def queryScriptList(
         if connection:
             connection.close()
 
+
 @app.get("/queryScriptLogList", response_model=dict, summary="查询脚本执行列表")
 async def query_script_log_list(
         page: int = Query(1, ge=1),
@@ -320,6 +325,7 @@ async def query_script_log_list(
             cursor.close()
         if connection:
             connection.close()
+
 
 # 更新请求模型
 class ScriptUpdate(BaseModel):
@@ -386,6 +392,7 @@ async def update_script(
         if connection:
             connection.close()
 
+
 @app.get("/queryLogHttpList", response_model=dict, summary="查询 HTTP 接口列表")
 async def query_log_http_list(
         page: int = Query(1, ge=1),
@@ -443,10 +450,47 @@ async def query_log_http_list(
         if connection:
             connection.close()
 
-@app.get("/", summary="根文件")
-def read_root():
-    return JSONResponse(
-        content={"message": "Welcome to the Playwright code generator API. Use /codegen?url=<your_url>"})
+
+# 定义请求和响应的数据模型
+class Item(BaseModel):
+    name: str
+    value: int
+
+
+@app.post("/executeApi")
+async def executeApi(
+        url: Optional[str] = Query(None, title="请求url", description="url"),
+        data: Optional[str] = Query(None, title="请求参数", description="请求参数")
+):
+    try:
+        data_dict = json.loads(data)
+        logger.info("executeApi|数据转换成功")
+        script_name = data.get("script_name")
+        # 检查脚本名称是否存在
+        if not script_name:
+            logger.warning("send_post_request|脚本名称不存在，无法保存日志或发送请求")
+            return {"status": "fail", "message": "脚本名称不存在"}
+
+        log_id = save_script_log(script_name, data, "API", "正在执行..", "脚本正在执行,请耐心等候")  # 保存日志
+
+        # 从字典中获取 script_name
+        script_name = data_dict.get("script_name")
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, json=data_dict)
+        response.raise_for_status()  # 如果出错，抛出异常
+        # 假设 response.text 返回的是 'true' 或 'false' 字符串
+        is_success = response.text.lower() == 'true'
+        if is_success:
+            logger.info("send_post_request|请求成功")
+            update_script_execute_log(log_id, "执行成功", "API 执行成功", script_name)
+            return create_response(False, f"脚本执行失败", None)
+        else:
+            logger.warning("send_post_request|请求失败")
+            update_script_execute_log(log_id, "执行失败", "API 执行失败", script_name)
+            return create_response(True, f"脚本执行成功", None)
+    except Exception as e:
+        update_script_execute_log(log_id, "执行失败", str(e), script_name)
+        return create_response(False, f"脚本执行异常", None)
 
 
 if __name__ == "__main__":
