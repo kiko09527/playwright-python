@@ -468,7 +468,7 @@ async def executeApi(
         script_name = data.get("script_name")
         # 检查脚本名称是否存在
         if not script_name:
-            logger.warning("send_post_request|脚本名称不存在，无法保存日志或发送请求")
+            logger.warning("executeApi|脚本名称不存在，无法保存日志或发送请求")
             return {"status": "fail", "message": "脚本名称不存在"}
 
         log_id = save_script_log(script_name, data, "API", "正在执行..", "脚本正在执行,请耐心等候")  # 保存日志
@@ -481,14 +481,15 @@ async def executeApi(
         # 假设 response.text 返回的是 'true' 或 'false' 字符串
         is_success = response.text.lower() == 'true'
         if is_success:
-            logger.info("send_post_request|请求成功")
+            logger.info("executeApi|请求成功")
             update_script_execute_log(log_id, "执行成功", "API 执行成功", script_name)
             return create_response(False, f"脚本执行失败", None)
         else:
-            logger.warning("send_post_request|请求失败")
+            logger.warning("executeApi|请求失败")
             update_script_execute_log(log_id, "执行失败", "API 执行失败", script_name)
             return create_response(True, f"脚本执行成功", None)
     except Exception as e:
+        logger.error(f"executeApi|请求服务异常:{e}")
         update_script_execute_log(log_id, "执行失败", str(e), script_name)
         return create_response(False, f"脚本执行异常", None)
 
