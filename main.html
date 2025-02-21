@@ -502,7 +502,7 @@
 </head>
 <body>
 <div class="container">
-    <h1>生成 Python 文件</h1>
+    <h1>懒人助手(手动版)</h1>
     
     <!-- 新增获取脚本区域 -->
     <div class="script-gen-box">
@@ -662,9 +662,9 @@
                 </div>
                 <div class="action-buttons">
                     <button class="execute-btn" onclick="executeScript('${script.script_name}')">执行</button>
-                    <button class="debug-btn" onclick="debugScript('${script.script_name}')">Debug</button>
-                    <button class="report-btn" onclick="showReport('${script.script_name}')">显示报告</button>
-                    <button class="api-btn" onclick="openApiDocs('${script.script_name}')">API执行</button>
+                    <button class="debug-btn" onclick="debugScript('${script.script_name}')">Debug调试</button>
+                    <button class="report-btn" onclick="showReport('${script.script_name}')">Trace报告</button>
+                    <button class="api-btn" onclick="openApiDocs('${script.script_name}')">API接口执行</button>
                     <button class="log-btn" onclick="showLogs('${script.script_name}')">执行日志</button>
                     <button class="api-list-btn" onclick="showApiList('${script.script_name}')">接口列表</button>
                     <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}','${script.delete_apis || ''}')">设置</button>

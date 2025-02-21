@@ -47,18 +47,24 @@ db_config = {
 
 
 # 记录响应
-def log_response(response, filtered_apis=None, need_api=None, current_file_name=None, unique_code=None):
+def log_response(response, delete_apis=None,filtered_apis=None, need_api=None, current_file_name=None, unique_code=None):
     try:
+        if delete_apis is None:
+            delete_apis = set()
+
         if filtered_apis is None:
             filtered_apis = set()
         # 没有指定要记录的 API 则使用默认值
         if need_api is None:
             need_api = "api-store-test.gaojihealth.cn"
-
         # 先检查 request.url 是否包含 need_api，若不包含则直接返回
         if need_api not in response.url:
             # logger.warning(f"log_response 首次次校验不通过|url:{response.url}跳过记录")
             return  # 直接返回，不记录任何内容
+
+        # 如果 delete_apis 不为空，并且 response.url 包含其中任意一项，则直接返回
+        if delete_apis and any(api in response.url for api in delete_apis):
+            return  # 不记录任何内容
 
         if filtered_apis and any(api in response.url for api in filtered_apis):
             return  # 直接返回，不记录任何内容
@@ -125,32 +131,39 @@ def save_to_database(data, current_file_name, unique_code):
 
 def get_api_fifter(current_file_name):
     try:
-        # 从数据库获取 filtered_apis 和 need_api
+        # 从数据库获取 filtered_apis、delete_apis 和 need_api
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
-        # 这里的 SQL 查询可以根据需要进行调整
-        cursor.execute("SELECT need_api, filtered_apis FROM script_info WHERE script_name = %s", (current_file_name,))
+
+        # 使用 SQL 查询获取相关数据
+        cursor.execute("SELECT need_api, filtered_apis, delete_apis FROM script_info WHERE script_name = %s", (current_file_name,))
         result = cursor.fetchone()
         cursor.close()
         connection.close()
-        if result:
-            filtered_apis_json = result['filtered_apis']
-            if filtered_apis_json:
-                try:
-                    # 解析 JSON 并转换为集合
-                    filtered_apis = set(json.loads(filtered_apis_json))
-                except json.JSONDecodeError:
-                    # 如果解析失败，返回空集合
-                    filtered_apis = set()
-            else:
-                # 如果 filtered_apis 为空字符串，返回空集合
-                filtered_apis = set()
 
-            return filtered_apis, result['need_api']
-        return None, None
+        if result:
+            # 获取过滤的 API 和需要的 API
+            filtered_apis_str = result['filtered_apis']
+            delete_apis_str = result['delete_apis']
+            need_api = result['need_api']
+
+            # 将 filtered_apis 字符串转换为集合
+            filtered_apis = set(filtered_apis_str.split('|')) if filtered_apis_str else set()
+
+            # 将 delete_apis 字符串转换为集合
+            delete_apis = set(delete_apis_str.split('|')) if delete_apis_str else set()
+
+            return {
+                "filtered_apis": filtered_apis,
+                "delete_apis": delete_apis,
+                "need_api": need_api
+            }
+
+        return None
+
     except Exception as e:
-        logger.error(f"get_api_fifter|服务异常 current_file_name:{current_file_name},异常{e}")
-        pass
+        logger.error(f"get_api_fifter|服务异常 current_file_name:{current_file_name}, 异常: {e}")
+        return None
 
 
 # 创建新页面并绑定监听器
@@ -158,10 +171,14 @@ def setup_page(page, current_file_name, unique_code):
     try:
         logger.info(f"setup_page|请求参数 current_file_name:{current_file_name},unique_code:{unique_code}")
         current_file_name = current_file_name.replace(".py", "")
-        filtered_apis, need_api = get_api_fifter(current_file_name)
+        result = get_api_fifter(current_file_name)
         # 绑定请求监听器，传递过滤接口和记录的 API URL
         # page.on("request", lambda request: log_request(request, filtered_apis, need_api, current_file_name, unique_code))
-        page.on("response", lambda response: log_response(response, filtered_apis, need_api, current_file_name,
+        page.on("response", lambda response: log_response(response,
+                                                          result.get("delete_apis", set()),
+                                                          result.get("filtered_apis", set()),
+                                                          result.get("need_api", None),
+                                                          current_file_name,
                                                           unique_code))  # 设置响应的监听器
     except Exception as e:
         logger.error(f"setup_page|服务异常 current_file_name:{current_file_name},unique_code:{unique_code},{e}")

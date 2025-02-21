@@ -90,7 +90,7 @@ def run(playwright: Playwright) -> None:
         # ---------------------
         # Stop tracing and export it into a zip archive.
     finally:
-        context.tracing.stop(path='33.zip')
+        context.tracing.stop(path='精准营销创建.zip')
         context.close()
         browser.close()
 
