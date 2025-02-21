@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from http_info import setup_page
 from playwright.sync_api import Playwright, sync_playwright
 import os
 import uuid
@@ -8,6 +9,7 @@ app = FastAPI()
 
 # 定义请求参数模型
 class PromotionRequest(BaseModel):
+    script_name: str          # 脚本名称
     username: str          # 工号/移动电话
     password: str          # 登录密码
     task_name: str         # 任务名称
@@ -24,12 +26,14 @@ def run(playwright: Playwright, request: PromotionRequest) -> bool:
         browser = playwright.chromium.launch(headless=False)
         context = browser.new_context()
 
-        # Start tracing before creating / navigating a page.
+
         context.tracing.start(screenshots=True, snapshots=True, sources=True)
         page = context.new_page()
         current_file_name = os.path.basename(__file__)
-        uuid_code = str(uuid.uuid1())
-        print(f"确定: current_file_name: {current_file_name}")
+        uuid_code =str(uuid.uuid1())
+        print(f"确定:current_file_name: {current_file_name}")
+        setup_page(page,current_file_name,uuid_code)
+        page.on("popup", lambda p: setup_page(p,current_file_name,uuid_code))
 
         # 登录操作
         page.goto("https://sso-uat.gaojihealth.cn/login/#/")

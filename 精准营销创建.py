@@ -75,20 +75,6 @@ def run(playwright: Playwright) -> None:
 
         # 等待一段时间以确保请求完成
         page1.wait_for_timeout(5000)
-        # 打印请求和响应信息
-        # print("\n--- Summary of Requests ---")
-        # for req in requests:
-        #     print(req)
-        #
-        # print("\n--- Summary of Responses ---")
-        # for resp in responses:
-        #     # 注意：如果body是bytes，需进行解码
-        #     if isinstance(resp["body"], bytes):
-        #         print(f"Response URL: {resp['url']}, Status: {resp['status']}, Body: {resp['body'].decode('utf-8')}")
-        #     else:
-        #         print(f"Response URL: {resp['url']}, Status: {resp['status']}, Body: {resp['body']}")
-        # ---------------------
-        # Stop tracing and export it into a zip archive.
     finally:
         context.tracing.stop(path='精准营销创建.zip')
         context.close()
