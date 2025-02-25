@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query, Path
+from fastapi import FastAPI, HTTPException, Query, Path, Request
 from fastapi.responses import JSONResponse
 import subprocess
 import json
@@ -458,40 +458,69 @@ class Item(BaseModel):
 
 
 @app.post("/executeApi")
-async def executeApi(
-        url: Optional[str] = Query(None, title="请求url", description="url"),
-        data: Optional[str] = Query(None, title="请求参数", description="请求参数")
-):
+async def executeApi(request: Request):
     try:
-        data_dict = json.loads(data)
-        logger.info("executeApi|数据转换成功")
-        script_name = data.get("script_name")
-        # 检查脚本名称是否存在
-        if not script_name:
-            logger.warning("executeApi|脚本名称不存在，无法保存日志或发送请求")
-            return {"status": "fail", "message": "脚本名称不存在"}
+        # 从请求体中直接获取数据
+        request_data = await request.json()
+        url = request_data.get("url")
+        data = request_data.get("data")
+        logger.info(f"executeApi|请求参数: url:{url},data:{data}")
+        if not url or not data:
+            return create_response(False, "URL和请求数据不能为空", None)
 
-        log_id = save_script_log(script_name, data, "API", "正在执行..", "脚本正在执行,请耐心等候")  # 保存日志
+        # 解析JSON字符串为列表
+        data_list = json.loads(data)
+        if not isinstance(data_list, list):
+            return create_response(False, "数据格式错误，需要提供JSON数组", None)
+        logger.info(f"executeApi|本次一共{len(data_list)}个请求")
 
-        # 从字典中获取 script_name
-        script_name = data_dict.get("script_name")
-        async with httpx.AsyncClient() as client:
-            response = await client.post(url, json=data_dict)
-        response.raise_for_status()  # 如果出错，抛出异常
-        # 假设 response.text 返回的是 'true' 或 'false' 字符串
-        is_success = response.text.lower() == 'true'
-        if is_success:
-            logger.info("executeApi|请求成功")
-            update_script_execute_log(log_id, "执行成功", "API 执行成功", script_name)
-            return create_response(False, f"脚本执行失败", None)
-        else:
-            logger.warning("executeApi|请求失败")
-            update_script_execute_log(log_id, "执行失败", "API 执行失败", script_name)
-            return create_response(True, f"脚本执行成功", None)
+        results = []
+        # 循环处理每个请求
+        for data_item in data_list:
+            try:
+                if not isinstance(data_item, dict):
+                    logger.warning(f"executeApi|数据项格式错误: {data_item}")
+                    results.append({
+                        "status": "fail",
+                        "message": "数据格式错误",
+                        "data": data_item
+                    })
+                    continue
+
+                # 发送请求
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(url, json=data_item)
+                response.raise_for_status()
+
+                # 处理响应
+                results.append({
+                    "status": "success",
+                    "message": "执行成功",
+                    "data": data_item,
+                    "response": response.text
+                })
+
+            except Exception as item_error:
+                logger.error(f"executeApi|单个请求执行异常: {item_error}")
+                results.append({
+                    "status": "error",
+                    "message": str(item_error),
+                    "data": data_item
+                })
+
+        # 返回所有执行结果
+        success_count = sum(1 for r in results if r["status"] == "success")
+        total_count = len(results)
+        
+        return {
+            "success": True,
+            "message": f"执行完成: 成功 {success_count}/{total_count}",
+            "results": results
+        }
+
     except Exception as e:
-        logger.error(f"executeApi|请求服务异常:{e}")
-        update_script_execute_log(log_id, "执行失败", str(e), script_name)
-        return create_response(False, f"脚本执行异常", None)
+        logger.error(f"executeApi|整体服务异常: {e}")
+        return create_response(False, f"服务异常: {str(e)}", None)
 
 
 if __name__ == "__main__":

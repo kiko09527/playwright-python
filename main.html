@@ -596,6 +596,67 @@
         .tab-content.active {
             display: block;
         }
+
+        /* 批量API请求模态框样式 */
+        .batch-api-item {
+            position: relative;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;  /* 添加间距 */
+        }
+
+        .batch-api-input {
+            flex: 1;  /* 让输入框占据剩余空间 */
+            min-height: 60px;  /* 设置最小高度 */
+            resize: vertical;  /* 允许垂直拉伸 */
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-family: monospace;  /* 使用等宽字体 */
+            font-size: 14px;
+        }
+
+        .batch-api-controls {
+            display: flex;
+            flex-direction: column;  /* 按钮垂直排列 */
+            gap: 5px;
+        }
+
+        .add-api-btn, .remove-api-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 30px;  /* 固定按钮宽度 */
+            height: 30px;  /* 固定按钮高度 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-api-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .remove-api-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        /* 添加标签样式 */
+        .batch-api-form label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -721,6 +782,29 @@
     </div>
 </div>
 
+<!-- 添加批量API请求模态框 -->
+<div id="batchApiModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeBatchApiModal()">&times;</span>
+        <h2>脚本批量执行</h2>
+        <form id="batchApiForm" class="batch-api-form">
+            <div>
+                <label for="batchApiUrl">请求URL:</label>
+                <input type="text" id="batchApiUrl" required class="modal-form-input" style="width: 100%;">
+            </div>
+            
+            <div>
+                <label for="batchApiItems">请求体:</label>
+                <div id="batchApiItems">
+                    <!-- API请求项将在这里动态添加 -->
+                </div>
+            </div>
+            
+            <button type="submit" class="save-btn">执行请求</button>
+        </form>
+    </div>
+</div>
+
 <script>
     let currentPage = 1;
     const pageSize = 10;
@@ -800,10 +884,11 @@
                     <span>${formatDateTime(script.update_time)}</span>
                 </div>
                 <div class="action-buttons">
-                    <button class="execute-btn" onclick="executeScript('${script.script_name}')">执行</button>
+                    <button class="execute-btn" onclick="executeScript('${script.script_name}')">脚本执行</button>
                     <button class="debug-btn" onclick="debugScript('${script.script_name}')">Debug调试</button>
                     <button class="report-btn" onclick="showReport('${script.script_name}')">Trace报告</button>
-                    <button class="api-btn" onclick="openApiDocs('${script.script_name}')">API接口执行</button>
+                    <button class="api-btn" onclick="openApiDocs('${script.script_name}')">脚本接口执行</button>
+                    <button class="api-btn" onclick="openBatchApi('${script.script_name}')">脚本批量执行</button>
                     <button class="log-btn" onclick="showLogs('${script.script_name}')">执行日志</button>
                     <button class="api-list-btn" onclick="showApiList('${script.script_name}')">接口列表</button>
                     <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}','${script.delete_apis || ''}')">设置</button>
@@ -1313,6 +1398,100 @@
             }
         });
     }
+
+    // 打开批量API模态框
+    function openBatchApi(scriptName) {
+        const modal = document.getElementById('batchApiModal');
+        modal.style.display = 'flex';
+        
+        // 清空现有项并添加第一个请求项
+        const itemsContainer = document.getElementById('batchApiItems');
+        itemsContainer.innerHTML = '';
+        addApiItem(scriptName);
+    }
+
+    // 关闭批量API模态框
+    function closeBatchApiModal() {
+        document.getElementById('batchApiModal').style.display = 'none';
+    }
+
+    // 添加API请求项
+    function addApiItem(scriptName = '') {
+        const itemsContainer = document.getElementById('batchApiItems');
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'batch-api-item';
+        
+        itemDiv.innerHTML = `
+            <textarea 
+                class="batch-api-input"
+                placeholder="请输入请求参数..."
+            ></textarea>
+            <div class="batch-api-controls">
+                <button type="button" class="add-api-btn" onclick="addApiItem()">+</button>
+                <button type="button" class="remove-api-btn" onclick="removeApiItem(this)">-</button>
+            </div>
+        `;
+        
+        itemsContainer.appendChild(itemDiv);
+    }
+
+    // 删除API请求项
+    function removeApiItem(button) {
+        const itemsContainer = document.getElementById('batchApiItems');
+        if (itemsContainer.children.length > 1) {
+            button.closest('.batch-api-item').remove();
+        } else {
+            alert('至少需要保留一个请求项！');
+        }
+    }
+
+    // 处理批量API请求表单提交
+    document.getElementById('batchApiForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const url = document.getElementById('batchApiUrl').value;
+        const items = document.querySelectorAll('.batch-api-input');
+        const dataList = [];
+
+        // 收集所有请求项的数据
+        for (const item of items) {
+            try {
+                const jsonData = JSON.parse(item.value);
+                dataList.push(jsonData);
+            } catch (error) {
+                alert('JSON格式错误，请检查输入！');
+                return;
+            }
+        }
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/executeApi', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: url,
+                    data: JSON.stringify(dataList)
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(`批量请求执行完成！\n${result.message}`);
+                // 显示详细结果
+                console.log('详细执行结果：', result.results);
+            } else {
+                alert(`批量请求失败：${result.message}`);
+            }
+            
+            closeBatchApiModal();
+            
+        } catch (error) {
+            alert('执行请求时发生错误：' + error.message);
+        }
+    });
 </script>
 </body>
 </html>
