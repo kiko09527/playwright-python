@@ -75,7 +75,8 @@ def log_response(response, delete_apis=None,filtered_apis=None, need_api=None, c
             "unique_code": unique_code,
             "method": response.request.method,
             "request_url": response.request.url,
-            "header": str(response.request.headers),
+            # 对 headers 进行处理以去掉双引号并将所有单引号替换成双引号
+            "header": str(response.request.headers).replace('"', '').replace("'", '"'),
             "request_post_data": response.request.post_data,
             "url": response.url,
             "status": response.status,
