@@ -663,9 +663,9 @@
 <div class="container">
     <div class="tabs">
         <div class="tab-buttons">
-            <button class="tab-button active" onclick="switchTab(0)">懒人助手(手动版)</button>
-            <button class="tab-button" onclick="switchTab(1)">懒人助手(AI版)</button>
-            <button class="tab-button" onclick="switchTab(2)">待定</button>
+            <button class="tab-button active" onclick="switchTab(0)">Sloth(手动版)</button>
+            <button class="tab-button" onclick="switchTab(1)">Sloth(AI版)</button>
+            <button class="tab-button" onclick="switchTab(2)">Sloth(待定)</button>
         </div>
         
         <!-- Tab 1 内容 -->
@@ -1415,9 +1415,17 @@
         document.getElementById('batchApiModal').style.display = 'none';
     }
 
-    // 添加API请求项
-    function addApiItem(scriptName = '') {
+    const MAX_API_ITEMS = 3; // 定义最大请求项数量
+
+    function addApiItem() {
         const itemsContainer = document.getElementById('batchApiItems');
+        
+        // 检查当前请求项数量
+        if (itemsContainer.children.length >= MAX_API_ITEMS) {
+            alert('最多只能添加3个请求项！');
+            return;
+        }
+        
         const itemDiv = document.createElement('div');
         itemDiv.className = 'batch-api-item';
         
@@ -1433,13 +1441,32 @@
         `;
         
         itemsContainer.appendChild(itemDiv);
+        
+        // 如果达到最大数量，禁用所有添加按钮
+        if (itemsContainer.children.length >= MAX_API_ITEMS) {
+            const addButtons = document.querySelectorAll('.add-api-btn');
+            addButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.backgroundColor = '#ccc';
+                btn.style.cursor = 'not-allowed';
+            });
+        }
     }
 
-    // 删除API请求项
     function removeApiItem(button) {
         const itemsContainer = document.getElementById('batchApiItems');
         if (itemsContainer.children.length > 1) {
             button.closest('.batch-api-item').remove();
+            
+            // 当删除后数量小于最大值时，重新启用所有添加按钮
+            if (itemsContainer.children.length < MAX_API_ITEMS) {
+                const addButtons = document.querySelectorAll('.add-api-btn');
+                addButtons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.backgroundColor = '#28a745';
+                    btn.style.cursor = 'pointer';
+                });
+            }
         } else {
             alert('至少需要保留一个请求项！');
         }
