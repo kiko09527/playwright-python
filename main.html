@@ -1239,7 +1239,9 @@
         apiList.innerHTML = '';
 
         data.data.forEach(api => {
+
             const apiItem = document.createElement('div');
+            apiItem.style.backgroundColor = api.status === 200 ? 'transparent' : '#ffcccc'
             apiItem.className = `api-item ${api.status !== 200 ? 'error' : ''}`;
             apiItem.innerHTML = `
                 <div class="api-header">
@@ -1262,7 +1264,7 @@
                 </div>
                 <div class="api-detail-row">
                     <span>POST请求参数:</span>
-                    <span>${api.post_data}</span>
+                    <span>${api.post_data ? api.post_data : '暂无'}</span>
                 </div>
                 <div class="api-detail-row">
                     <span>请求头:</span>
