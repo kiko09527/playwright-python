@@ -37,8 +37,7 @@ class CodeModifier(ast.NodeTransformer):
                                     attr='path.basename',
                                     ctx=ast.Load()
                                 ),
-                                args=[ast.Attribute(value=ast.Name(id='__file__', ctx=ast.Load()), attr='',
-                                                    ctx=ast.Load())],
+                                args=[ast.Name(id='__file__', ctx=ast.Load())],  # 修改此行,
                                 keywords=[]
                             ),
                         )

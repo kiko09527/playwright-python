@@ -40,8 +40,7 @@ class CodeModifier(ast.NodeTransformer):
                                     attr='path.basename',
                                     ctx=ast.Load()
                                 ),
-                                args=[ast.Attribute(value=ast.Name(id='__file__', ctx=ast.Load()), attr='',
-                                                    ctx=ast.Load())],
+                                args=[ast.Name(id='__file__', ctx=ast.Load())],  # 修改此行,
                                 keywords=[]
                             ),
                         )
@@ -136,7 +135,7 @@ class CodeModifier(ast.NodeTransformer):
                         ctx=ast.Load()
                     ),
                     args=[],  # args 不需要参数，因为我们使用关键字参数
-                    keywords=[ast.keyword(arg='path', value=ast.Constant(value="12121.zip"))]  # 使用双引号
+                    keywords=[ast.keyword(arg='path', value=ast.Constant(value="999999999.zip"))]  # 使用双引号
                 ))
             )
 
@@ -204,6 +203,6 @@ def modify_code(source_code, parameter):
     modified_code = astor.to_source(modified_tree)
 
     # 替换路径中的参数
-    modified_code = modified_code.replace("12121.zip", f"{parameter}.zip")
+    modified_code = modified_code.replace("999999999.zip", f"{parameter}.zip")
 
     return modified_code

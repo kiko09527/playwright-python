@@ -20,8 +20,8 @@ app.add_middleware(
 )
 
 # 将不同的 API 挂载到不同的路径下
-app.mount("/jzyx", jzyx_api_app)      # 访问 /api/v1/trace
-app.mount("/test", multi_routes_app)    # 访问 /api/v2/trace
+app.mount("/jzyx", jzyx_api_app)
+app.mount("/test", multi_routes_app)
 app.mount("/api/", file_api_app)
 
 if __name__ == "__main__":
