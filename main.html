@@ -630,7 +630,11 @@
         <div class="tab-content active">
             
             <!-- 新增获取脚本区域 -->
-            <div class="script-gen-box">
+            <div class="script-gen-box" style="margin-bottom: 20px;background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem">
                 <input 
                     type="text" 
                     id="scriptUrl" 
@@ -640,18 +644,20 @@
                 <button id="generateScript" class="generate-btn">获取脚本</button>
             </div>
 
-            <form id="uploadForm" action="http://127.0.0.1:8000/api/upload" method="post">
-                <label for="filename">脚本名称:</label>
-                <input type="text" name="filename" placeholder="请输入脚本名称" required><br><br>
+            <div style="margin-top: 20px;">
+                <form id="uploadForm" action="http://127.0.0.1:8000/api/upload" method="post">
+                    <label for="filename">脚本名称:</label>
+                    <input type="text" name="filename" placeholder="请输入脚本名称" required><br><br>
 
-                <label for="code">Python 代码:</label><br>
-                <textarea name="code" rows="10" cols="30" placeholder="Write your Python code here..." required></textarea><br><br>
+                    <label for="code">Python 代码:</label><br>
+                    <textarea name="code" rows="10" cols="30" placeholder="Write your Python code here..." required></textarea><br><br>
 
-                <label for="set_trace">启用追踪:</label>
-                <input type="checkbox" name="setTrace" value="true"><br><br>
+                    <label for="set_trace">启用追踪:</label>
+                    <input type="checkbox" name="setTrace" value="true"><br><br>
 
-                <button type="submit">生成脚本文件</button>
-            </form>
+                    <button type="submit">生成脚本文件</button>
+                </form>
+            </div>
 
             <div class="script-list">
                 <h2>脚本文件列表</h2>
