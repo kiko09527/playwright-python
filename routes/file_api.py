@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Query, Path, Request,Form
 from fastapi.responses import JSONResponse
 import subprocess
 import json
-from script_log import save_script_log, update_script_execute_log
+from script_log import save_script_log, update_script_execute_log,insert_script_info
 from pydantic import BaseModel
 import os
 import logging
@@ -205,7 +205,7 @@ def upload_code(filename: str = Form(...), code: str = Form(...)):
         # 将代码写入指定的 .py 文件
         with open(file_path, 'w') as file:
             file.write(modified_code)
-
+        insert_script_info(filename[:-3],"暂未执行")
         return JSONResponse(content={"message": "Python script created successfully!", "filename": filename})
     except Exception as e:
         logger.error(f"upload_code|服务异常{e}")
@@ -243,7 +243,8 @@ async def queryScriptList(
             query += " AND script_name = %s"
             params.append(script_name)
 
-        query += " LIMIT %s OFFSET %s"
+        # 添加排序条件并设置 LIMIT 和 OFFSET
+        query += " ORDER BY create_time DESC LIMIT %s OFFSET %s"
         params.append(page_size)
         params.append(offset)
 

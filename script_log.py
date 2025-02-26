@@ -58,6 +58,38 @@ def save_script_log(script_name, post_data, mode, status, msg):
         if connection:
             connection.close()
 
+def insert_script_info(script_name, last_exec_status):
+
+    logger.info(f"insert_script_info|请求参数 script_name: {script_name}, last_exec_status: {last_exec_status}")
+    # 初始化数据库连接和游标
+    connection = None
+    cursor = None
+    try:
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+
+        # 插入记录的 SQL 查询，只包含 script_name 和 last_exec_status
+        insert_query = """
+            INSERT INTO script_info (script_name, last_exec_status)
+            VALUES (%s, %s)
+        """
+
+        # 执行插入操作
+        cursor.execute(insert_query, (script_name, last_exec_status))
+
+        # 提交插入操作
+        connection.commit()
+
+        logger.info(f"insert_script_info|成功插入新的脚本信息，script_name: {script_name}")
+
+    except Exception as e:
+        logger.error(f"insert_script_info|数据库操作异常: {e}")
+    finally:
+        # 关闭游标和连接
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 def update_script_execute_log(script_id, new_status, new_msg,script_name):
     logger.info(f"update_script_execute_log|请求参数 new_status: {new_status}")
