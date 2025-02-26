@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query, Path, Request
+from fastapi import FastAPI, HTTPException, Query, Path, Request,Form
 from fastapi.responses import JSONResponse
 import subprocess
 import json
@@ -188,7 +188,8 @@ def run_pytest(trace: str):
 
 
 @app.post("/upload", summary="生成脚本文件")
-def upload_code(filename: str, code: str):
+def upload_code(filename: str = Form(...), code: str = Form(...)):
+    logger.info(f"upload_code|请求参数1 filename:{filename},code:{code}")
     if not filename.endswith('.py'):
         filename += '.py'  # 自动添加 .py 扩展名
 
@@ -207,6 +208,7 @@ def upload_code(filename: str, code: str):
 
         return JSONResponse(content={"message": "Python script created successfully!", "filename": filename})
     except Exception as e:
+        logger.error(f"upload_code|服务异常{e}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
