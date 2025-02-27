@@ -70,6 +70,13 @@ def log_response(response, delete_apis=None,filtered_apis=None, need_api=None, c
         # 如果 request.url 包含 filtered_apis 中的任何一项，则记录请求
         # 记录请求
         # 记录请求数据
+        query_data = {
+            "script_name": current_file_name,
+            "url": response.url
+        }
+        query_data_result = queryHttpSettingInfo4Server(query_data)
+
+
         response_data = {
             "script_name": current_file_name,
             "unique_code": unique_code,
@@ -90,6 +97,33 @@ def log_response(response, delete_apis=None,filtered_apis=None, need_api=None, c
         logger.error(f"log_response|处理服务异常{e}")
         pass
 
+def queryHttpSettingInfo4Server(query_data):
+    # 初始化数据库连接
+    connection = None
+    cursor = None
+    try:
+        logger.info(f"queryHttpSettingInfo|查询参数query_data: {query_data}")
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)  # 返回字典格式数据
+        # 构建查询 SQL 语句
+        select_query = """
+            SELECT * 
+            FROM http_seting_info 
+            WHERE script_name = %s AND url = %s
+        """
+        cursor.execute(select_query, (query_data.script_name, query_data.url))  # 执行查询
+        result = cursor.fetchone()  # 获取第一条记录
+        if result is None:
+            logger.warning(f"queryHttpSettingInfo|Setting not found")
+        return result
+    except Exception as e:
+        logger.error(f"queryHttpSettingInfo|整体服务异常: {e}")
+    finally:
+        # 关闭游标和连接
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 def save_to_database(data, current_file_name, unique_code):
     try:
@@ -98,10 +132,8 @@ def save_to_database(data, current_file_name, unique_code):
         # 删除基于 script_name 的所有记录,只保存最新的
         delete_query = "DELETE FROM log_http WHERE script_name = %s and unique_code!=%s"
         cursor.execute(delete_query, (current_file_name, unique_code,))
-
         # 提交删除操作
         connection.commit()
-
         insert_query = """
             INSERT INTO log_http (script_name, unique_code, url, headers, post_data, method, status, body,response_header)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s,%s)
