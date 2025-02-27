@@ -15,7 +15,35 @@ db_config = {
     'database': 'autotest'  # 数据库名称
 }
 
-
+def query_script_info(script_name):
+    logger.info(f"query_script_info|请求参数 script_name: {script_name}")
+    script_name = script_name.replace(".py", "")
+    # 初始化数据库连接和游标
+    connection = None
+    cursor = None
+    try:
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)  # 使用字典方式获取结果
+        # 查询脚本信息的 SQL 查询
+        query = "SELECT * FROM script_info WHERE script_name = %s"
+        # 执行查询操作
+        cursor.execute(query, (script_name,))
+        result = cursor.fetchone()  # 获取第一条记录
+        if result:
+            logger.info(f"query_script_info|找到记录: {result}")
+            return result  # 返回找到的记录
+        else:
+            logger.warning(f"query_script_info|未找到脚本名称 '{script_name}' 的记录。")
+            return None  # 没有找到对应记录
+    except Exception as e:
+        logger.error(f"query_script_info|数据库操作异常: {e}")
+        return None  # 如果出现异常，返回 None
+    finally:
+        # 关闭游标和连接
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 def save_script_log(script_name, post_data, mode, status, msg):
     cursor = None
     connection = None

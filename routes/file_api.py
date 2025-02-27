@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Query, Path, Request, Form
 from fastapi.responses import JSONResponse
 import subprocess
 import json
-from script_log import save_script_log, update_script_execute_log, insert_script_info
+from script_log import save_script_log, update_script_execute_log, insert_script_info,query_script_info
 from pydantic import BaseModel
 import os
 import logging
@@ -196,6 +196,12 @@ def upload_code(filename: str = Form(...), code: str = Form(...),fileType: str =
 
     if not code:
         raise HTTPException(status_code=400, detail="No code provided.")
+    # 查询数据库确认 script_name 是否存在
+
+    existing_script = query_script_info(filename)
+    if existing_script:
+        logger.warning(f"upload_code|脚本名称 '{filename}' 已存在，无法重复上传。")
+        return JSONResponse(content={"error": "Script already exists."}, status_code=400)
 
     modified_code = genera_python_code.modify_code(code, filename)
 
