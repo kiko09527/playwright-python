@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Query, Path, Request, Form
 from fastapi.responses import JSONResponse
 import subprocess
 import json
-from script_log import save_script_log, update_script_execute_log, insert_script_info,query_script_info
+from script_log import save_script_log, update_script_execute_log, insert_script_info, query_script_info
 from pydantic import BaseModel
 import os
 import logging
@@ -188,11 +188,11 @@ def run_pytest(trace: str):
 
 
 @app.post("/upload", summary="生成脚本文件")
-def upload_code(filename: str = Form(...), code: str = Form(...),fileType: str = Form(None)):
+def upload_code(filename: str = Form(...), code: str = Form(...), fileType: str = Form(None)):
     logger.info(f"upload_code|请求参数1 filename:{filename},code:{code}")
     # 根据 fileType 修改文件名逻辑
     if not filename.endswith('.py'):
-            filename += '.py'  # 自动添加 .py 扩展名
+        filename += '.py'  # 自动添加 .py 扩展名
 
     if not code:
         raise HTTPException(status_code=400, detail="No code provided.")
@@ -610,6 +610,117 @@ async def executeApi(request: Request):
     except Exception as e:
         logger.error(f"executeApi|整体服务异常: {e}")
         return create_response(False, f"服务异常: {str(e)}", None)
+
+
+# 定义输入数据模型
+class HttpSettingUpdate(BaseModel):
+    script_name: Optional[str]
+    url: Optional[str]
+    assert_type: Optional[str]
+    rule_type: Optional[str]
+    assert_body_type: Optional[str]
+    check_info: Optional[str]
+
+
+@app.post("/updateHttpSettingInfo")
+def updateHttpSettingInfo(update_data: HttpSettingUpdate):
+    # 初始化数据库连接
+    connection = None
+    cursor = None
+    try:
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+        # 构建更新 SQL 语句
+        update_columns = []
+        query_params = []
+        logger.warning(f"updateHttpSettingInfo|请求参数update_data:{update_data}")
+        # 检查必需的字段是否提供
+        if not update_data.script_name or not update_data.url:
+            raise HTTPException(status_code=400, detail="Both 'script_name' and 'url' are required.")
+
+        # 只更新提供的字段
+        if update_data.assert_type is not None:
+            update_columns.append("assert_type = %s")
+            query_params.append(update_data.assert_type)
+        if update_data.rule_type is not None:
+            update_columns.append("rule_type = %s")
+            query_params.append(update_data.rule_type)
+        if update_data.assert_body_type is not None:
+            update_columns.append("assert_body_type = %s")
+            query_params.append(update_data.assert_body_type)
+        if update_data.check_info is not None:
+            update_columns.append("check_info = %s")
+            query_params.append(update_data.check_info)
+
+        # 如果没有要更新的字段
+        if not update_columns:
+            logger.warning(f"updateHttpSettingInfo|No fields to update")
+            raise HTTPException(status_code=400, detail="No fields to update.")
+
+        # 添加 WHERE 条件
+        query_params.append(update_data.script_name)
+        query_params.append(update_data.url)
+        update_query = f"""
+            UPDATE http_seting_info 
+            SET {', '.join(update_columns)} 
+            WHERE script_name = %s AND url = %s
+        """
+        # 执行更新
+        cursor.execute(update_query, query_params)
+        connection.commit()
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Setting not found.")
+        logger.warning(f"updateHttpSettingInfo|更新完成")
+        return JSONResponse(content={"message": "Update successful."})
+    except Exception as e:
+        logger.error(f"updateHttpSettingInfo|整体服务异常: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # 关闭游标和连接
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+# 定义输入数据模型
+class HttpSettingQuery(BaseModel):
+    script_name: str
+    url: str
+
+
+@app.get("/queryHttpSettingInfo")
+def queryHttpSettingInfo(query_data: HttpSettingQuery):
+    # 初始化数据库连接
+    connection = None
+    cursor = None
+    try:
+        logger.info(f"queryHttpSettingInfo|查询参数query_data: {query_data}")
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)  # 返回字典格式数据
+
+        # 构建查询 SQL 语句
+        select_query = """
+            SELECT * 
+            FROM http_seting_info 
+            WHERE script_name = %s AND url = %s
+        """
+        cursor.execute(select_query, (query_data.script_name, query_data.url))  # 执行查询
+        result = cursor.fetchone()  # 获取第一条记录
+
+        if result is None:
+            logger.warning(f"queryHttpSettingInfo|Setting not found")
+            raise HTTPException(status_code=404, detail="Setting not found.")
+        return JSONResponse(content={"setting": result})  # 返回找到的记录
+    except Exception as e:
+        logger.error(f"queryHttpSettingInfo|整体服务异常: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # 关闭游标和连接
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 if __name__ == "__main__":
