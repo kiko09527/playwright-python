@@ -171,6 +171,7 @@ def setup_page(page, current_file_name, unique_code):
     try:
         logger.info(f"setup_page|请求参数 current_file_name:{current_file_name},unique_code:{unique_code}")
         current_file_name = current_file_name.replace(".py", "")
+        current_file_name = current_file_name.replace("_API", "")
         result = get_api_fifter(current_file_name)
         # 绑定请求监听器，传递过滤接口和记录的 API URL
         # page.on("request", lambda request: log_request(request, filtered_apis, need_api, current_file_name, unique_code))

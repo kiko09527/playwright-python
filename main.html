@@ -745,25 +745,42 @@
         </div>
     </div>
 </div>
+<!-- 添加API执行模态框 -->
+<div id="apiExecutionModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeApiExecutionModal()">&times;</span>
+        <h2>脚本模拟</h2>
+        <form id="apiExecutionForm">
+            <label for="apiName">脚本名称:</label>
+            <input type="text" id="apiName" required>
+
+            <label for="apiData">请求数据集合(json格式):</label>
+            <textarea id="apiData" required></textarea>
+
+            <button type="submit" class="save-btn">执行请求</button>
+        </form>
+    </div>
+</div>
+
 
 <!-- 添加批量API请求模态框 -->
 <div id="batchApiModal" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="closeBatchApiModal()">&times;</span>
-        <h2>脚本批量执行</h2>
+        <h2>API执行</h2>
         <form id="batchApiForm" class="batch-api-form">
             <div>
-                <label for="batchApiUrl">请求URL:</label>
-                <input type="text" id="batchApiUrl" required class="modal-form-input" style="width: 100%;">
+                <label for="scriptName">脚本名称:</label>
+                <input type="text" id="scriptName" required class="modal-form-input" style="width: 100%;">
             </div>
-            
+
             <div>
-                <label for="batchApiItems">请求体:</label>
+                <label for="batchApiItems">请求体(json格式):</label>
                 <div id="batchApiItems">
                     <!-- API请求项将在这里动态添加 -->
                 </div>
             </div>
-            
+
             <button type="submit" class="save-btn">执行请求</button>
         </form>
     </div>
@@ -789,7 +806,7 @@
                 page: page,
                 page_size: pageSize
             });
-            
+
             if (currentScriptName) {
                 searchParams.append('script_name', currentScriptName);
             }
@@ -817,24 +834,23 @@
                 <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px;">
                     <span style="color: #666;">最近一次执行结果:</span>
                     <span style="color: ${
-                        script.last_exec_status 
+                        script.last_exec_status
                             ? (script.last_exec_status.includes('失败') || script.last_exec_status.includes('异常')
                                 ? '#dc3545'  // 红色
                                 : script.last_exec_status.includes('成功')
                                     ? '#28a745'  // 绿色
                                     : '#666'     // 默认灰色
-                            ) 
+                            )
                             : '#666'
                     }">${script.last_exec_status || '暂无'}</span>
                     <span style="color: #666;">执行时间间隔(分钟):</span>
                     <span>${script.execute_time || '暂无'}</span>
                     <span style="color: #666;">请求URL匹配:</span>
-                    <span>${script.need_api}</span>
-
+                    <span>${script.need_api || '暂无'}</span>
                     <span style="color: #666; height: 31px; line-height: 31px; margin: 8px 0;">需要的API集合:</span>
                     <div class="api-tags">
                         ${
-                            script.filtered_apis 
+                            script.filtered_apis
                                 ? script.filtered_apis.split('|')
                                     .map(api => `<span class="api-tag">${api.trim()}</span>`)
                                     .join('')
@@ -844,7 +860,7 @@
                     <span style="color: #666; height: 31px; line-height: 31px; margin: 8px 0;">过滤的API集合:</span>
                     <div class="api-tags">
                         ${
-                            script.delete_apis 
+                            script.delete_apis
                                 ? script.delete_apis.split('|')
                                     .map(api => `<span class="api-tag">${api.trim()}</span>`)
                                     .join('')
@@ -857,11 +873,11 @@
                     <span>${formatDateTime(script.update_time)}</span>
                 </div>
                 <div class="action-buttons">
-                    <button class="execute-btn" onclick="executeScript('${script.script_name}')">脚本执行</button>
-                    <button class="debug-btn" onclick="debugScript('${script.script_name}')">Debug调试</button>
-                    <button class="report-btn" onclick="showReport('${script.script_name}')">Trace报告</button>
-                    <button class="api-btn" onclick="openApiDocs('${script.script_name}')">脚本接口执行</button>
-                    <button class="api-btn" onclick="openBatchApi('${script.script_name}')">脚本批量执行</button>
+                    <button class="execute-btn" onclick="executeScript('${script.script_name}')">执行</button>
+                    <button class="debug-btn" onclick="debugScript('${script.script_name}')">调试</button>
+                    <button class="report-btn" onclick="showReport('${script.script_name}')">Trace跟踪</button>
+                    <button class="api-btn" onclick="openApiDocs('${script.script_name}')">Swagger</button>
+                    <button class="api-btn" onclick="openBatchApi('${script.script_name}')">脚本模拟</button>
                     <button class="log-btn" onclick="showLogs('${script.script_name}')">执行日志</button>
                     <button class="api-list-btn" onclick="showApiList('${script.script_name}')">接口列表</button>
                     <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}','${script.delete_apis || ''}')">设置</button>
@@ -932,19 +948,19 @@
             if (!response.ok) {
                 throw new Error('网络请求失败');
             }
-            
+
             const result = await response.json();
-            
+
             // 根据返回的 success 状态显示对应的消息
             if (result.success) {
                 alert('执行成功：' + result.message);
             } else {
                 alert('执行失败：' + result.message);
             }
-            
+
             // 无论成功失败都刷新列表
             loadScripts(true);
-            
+
         } catch (error) {
             console.error('执行脚本失败:', error);
             alert('执行脚本失败：' + error.message);
@@ -1026,19 +1042,19 @@
             if (!response.ok) {
                 throw new Error('网络请求失败');
             }
-            
+
             const result = await response.json();
-            
+
             // 根据返回的 success 状态显示对应的消息
             if (result.success) {
                 alert('Debug成功：' + result.message);
             } else {
                 alert('Debug失败：' + result.message);
             }
-            
+
             // 无论成功失败都刷新列表
             loadScripts(true);
-            
+
         } catch (error) {
             console.error('Debug脚本失败:', error);
             alert('Debug脚本失败：' + error.message);
@@ -1052,19 +1068,19 @@
             if (!response.ok) {
                 throw new Error('网络请求失败');
             }
-            
+
             const result = await response.json();
-            
+
             // 根据返回的 success 状态显示对应的消息
             if (result.success) {
                 alert('获取报告成功：' + result.message);
             } else {
                 alert('获取报告失败：' + result.message);
             }
-            
+
             // 无论成功失败都刷新列表
             loadScripts(true);
-            
+
         } catch (error) {
             console.error('获取报告失败:', error);
             alert('获取报告失败：' + error.message);
@@ -1074,7 +1090,7 @@
     // 获取脚本功能
     document.getElementById('generateScript').addEventListener('click', async () => {
         const url = document.getElementById('scriptUrl').value.trim();
-        
+
         if (!url) {
             alert('请输入URL');
             return;
@@ -1085,9 +1101,9 @@
             if (!response.ok) {
                 throw new Error('网络请求失败');
             }
-            
+
             const result = await response.json();
-            
+
             // 根据返回的 success 状态显示对应的消息
             if (result.success) {
                 alert('获取脚本成功：' + result.message);
@@ -1098,7 +1114,7 @@
             } else {
                 alert('获取脚本失败：' + result.message);
             }
-            
+
         } catch (error) {
             console.error('获取脚本失败:', error);
             alert('获取脚本失败：' + error.message);
@@ -1139,7 +1155,7 @@
             const response = await fetch(
                 `http://127.0.0.1:8000/api/queryScriptLogList?page=${currentLogPage}&page_size=${logPageSize}&script_name=${encodeURIComponent(currentScriptNameForLog)}`
             );
-            
+
             if (!response.ok) {
                 throw new Error('获取日志失败');
             }
@@ -1162,12 +1178,12 @@
         data.data.forEach(log => {
             const logItem = document.createElement('div');
             logItem.className = 'log-item';
-            
+
             // 判断状态颜色
-            const statusClass = log.status.includes('成功') ? 'success' 
-                            : (log.status.includes('失败') || log.status.includes('异常')) ? 'error' 
+            const statusClass = log.status.includes('成功') ? 'success'
+                            : (log.status.includes('失败') || log.status.includes('异常')) ? 'error'
                             : '';
-            
+
             logItem.innerHTML = `
                 <div class="log-status ${statusClass}">
                     状态: ${log.status}
@@ -1224,7 +1240,7 @@
             const response = await fetch(
                 `http://127.0.0.1:8000/api/queryLogHttpList?page=${currentApiPage}&page_size=${apiPageSize}&script_name=${encodeURIComponent(currentScriptNameForApi)}`
             );
-            
+
             if (!response.ok) {
                 throw new Error('获取接口列表失败');
             }
@@ -1392,8 +1408,9 @@
     // 打开批量API模态框
     function openBatchApi(scriptName) {
         const modal = document.getElementById('batchApiModal');
+        document.getElementById('scriptName').value = scriptName; // 设置API名称
         modal.style.display = 'flex';
-        
+
         // 清空现有项并添加第一个请求项
         const itemsContainer = document.getElementById('batchApiItems');
         itemsContainer.innerHTML = '';
@@ -1409,29 +1426,29 @@
 
     function addApiItem() {
         const itemsContainer = document.getElementById('batchApiItems');
-        
+
         // 检查当前请求项数量
         if (itemsContainer.children.length >= MAX_API_ITEMS) {
             alert('最多只能添加3个请求项！');
             return;
         }
-        
+
         const itemDiv = document.createElement('div');
         itemDiv.className = 'batch-api-item';
-        
+
         itemDiv.innerHTML = `
-            <textarea 
+            <textarea
                 class="batch-api-input"
-                placeholder="请输入请求参数..."
+                placeholder='请输入请求参数例如:{"username": "ddzhao", "password": "123456"}...'
             ></textarea>
             <div class="batch-api-controls">
                 <button type="button" class="add-api-btn" onclick="addApiItem()">+</button>
                 <button type="button" class="remove-api-btn" onclick="removeApiItem(this)">-</button>
             </div>
         `;
-        
+
         itemsContainer.appendChild(itemDiv);
-        
+
         // 如果达到最大数量，禁用所有添加按钮
         if (itemsContainer.children.length >= MAX_API_ITEMS) {
             const addButtons = document.querySelectorAll('.add-api-btn');
@@ -1447,7 +1464,7 @@
         const itemsContainer = document.getElementById('batchApiItems');
         if (itemsContainer.children.length > 1) {
             button.closest('.batch-api-item').remove();
-            
+
             // 当删除后数量小于最大值时，重新启用所有添加按钮
             if (itemsContainer.children.length < MAX_API_ITEMS) {
                 const addButtons = document.querySelectorAll('.add-api-btn');
@@ -1465,8 +1482,8 @@
     // 处理批量API请求表单提交
     document.getElementById('batchApiForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        const url = document.getElementById('batchApiUrl').value;
+
+        const script_name = document.getElementById('scriptName').value;
         const items = document.querySelectorAll('.batch-api-input');
         const dataList = [];
 
@@ -1482,19 +1499,27 @@
         }
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/executeApi', {
+            const response = await fetch('http://127.0.0.1:8000/api/batchExecute', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    url: url,
+                    name: script_name,
                     data: JSON.stringify(dataList)
                 })
             });
 
+            // const response = await fetch('http://127.0.0.1:8000/api/batchExecute', {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //     },
+            //     body: JSON.stringify({ script_name, dataList })
+            // });
+
             const result = await response.json();
-            
+
             if (result.success) {
                 alert(`批量请求执行完成！\n${result.message}`);
                 // 显示详细结果
@@ -1502,9 +1527,9 @@
             } else {
                 alert(`批量请求失败：${result.message}`);
             }
-            
+
             closeBatchApiModal();
-            
+
         } catch (error) {
             alert('执行请求时发生错误：' + error.message);
         }
@@ -1524,9 +1549,9 @@
             const modal = document.getElementById('viewContentModal');
             const titleElement = document.getElementById('viewContentTitle');
             const bodyElement = document.getElementById('viewContentBody');
-            
+
             titleElement.textContent = title;
-            
+
             // 尝试格式化 JSON
             try {
                 const jsonContent = JSON.parse(decodedContent);
@@ -1535,7 +1560,7 @@
                 // 如果不是 JSON，直接显示原文
                 bodyElement.textContent = decodedContent;
             }
-            
+
             modal.style.display = 'flex';
         } catch (error) {
             console.error('查看内容失败:', error);
@@ -1554,6 +1579,39 @@
             viewContentModal.style.display = 'none';
         }
     }
+
+
+
+    // 处理API执行表单提交
+    document.getElementById('apiExecutionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById('apiName').value;
+        const data = document.getElementById('apiData').value;
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/batchExecute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name, data })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(`请求成功：${result.message}`);
+            } else {
+                alert(`请求失败：${result.message}`);
+            }
+
+            closeApiExecutionModal();
+
+        } catch (error) {
+            alert('执行请求时发生错误：' + error.message);
+        }
+    });
 </script>
 </body>
 </html>

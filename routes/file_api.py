@@ -1,8 +1,8 @@
-from fastapi import FastAPI, HTTPException, Query, Path, Request,Form
+from fastapi import FastAPI, HTTPException, Query, Path, Request, Form
 from fastapi.responses import JSONResponse
 import subprocess
 import json
-from script_log import save_script_log, update_script_execute_log,insert_script_info
+from script_log import save_script_log, update_script_execute_log, insert_script_info
 from pydantic import BaseModel
 import os
 import logging
@@ -205,7 +205,7 @@ def upload_code(filename: str = Form(...), code: str = Form(...)):
         # 将代码写入指定的 .py 文件
         with open(file_path, 'w') as file:
             file.write(modified_code)
-        insert_script_info(filename[:-3],"暂未执行")
+        insert_script_info(filename[:-3], "暂未执行")
         return JSONResponse(content={"message": "Python script created successfully!", "filename": filename})
     except Exception as e:
         logger.error(f"upload_code|服务异常{e}")
@@ -460,6 +460,85 @@ class Item(BaseModel):
     value: int
 
 
+@app.post("/batchExecute", summary="执行多次脚本")
+async def batchExecute(request: Request):
+    try:
+        # 从请求体中直接获取数据
+        request_data = await request.json()
+        name = request_data.get("name")
+        data = request_data.get("data")
+        logger.info(f"batchExecute|请求参数: url:{name},data:{data}")
+        if not name:
+            return create_response(False, "No script name provided.", None)  # 返回400
+        # 获取当前工作目录
+        current_directory = os.getcwd()
+        # 确保脚本名是以 '.py' 结尾
+        if not name.endswith('_API.py'):
+            name += '_API.py'  # 自动添加 '.py' 后缀
+        # 解析JSON字符串为列表
+        data_list = json.loads(data)
+        if not isinstance(data_list, list):
+            return create_response(False, "batchExecute|数据格式错误，需要提供JSON数组", None)
+        logger.info(f"batchExecute|本次一共{len(data_list)}个请求")
+        script_path = os.path.join(current_directory, name)
+        # 检查文件是否存在
+        if not os.path.isfile(script_path):
+            logger.error(f"batchExecute|文件不存在")
+            return create_response(False, "Script does not exist in the current directory.", None)  # 返回404错误
+
+        results = []
+        # 循环处理每个请求
+        for data_item in data_list:
+            try:
+                log_id = save_script_log(name, name, "API", "正在执行..", "脚本正在执行,请耐心等候")  # 保存日志
+                # 将 data_item 转换为字符串
+                command = [
+                    "python", script_path,
+                    json.dumps(data_item)  # 转换为字符串以传递
+                ]
+                logger.info(f"batchExecute|执行命令: {command}")  # 记录执行的命令
+                # 使用subprocess运行外部python脚本
+                result = subprocess.run(command, capture_output=True, text=True, check=True)
+                logger.info(f"batchExecute|命令输出: {result.stdout.strip()}")  # 记录命令输出
+                output = result.stdout.strip()
+                logger.error(f"batchExecute|执行成功{output}")
+                # 处理响应
+                results.append({
+                    "status": "success",
+                    "message": "执行成功",
+                    "data": data_item,
+                    "response": output
+                })
+                update_script_execute_log(log_id, "执行成功", "Script executed successfully.", name)
+            except subprocess.CalledProcessError as e:
+                logger.error(f"batchExecute|CalledProcessError服务异常: {e.stderr.strip()}")  # 记录标准错误输出
+                update_script_execute_log(log_id, "执行失败", e.stderr.strip(), name)
+                results.append({
+                    "status": "error",
+                    "message": str(e),
+                    "data": data_item
+                })
+            except Exception as e:
+                logger.error(f"batchExecute|服务异常{e}")
+                update_script_execute_log(log_id, "执行失败", str(e), name)
+                results.append({
+                    "status": "error",
+                    "message": str(e),
+                    "data": data_item
+                })
+        # 返回所有执行结果
+        success_count = sum(1 for r in results if r["status"] == "success")
+        total_count = len(results)
+        return {
+            "success": True,
+            "message": f"执行完成: 成功 {success_count}/{total_count}",
+            "results": results
+        }
+    except Exception as e:
+        logger.error(f"batchExecute|整体服务异常: {e}")
+        return create_response(False, f"batchExecute|服务异常: {str(e)}", None)
+
+
 @app.post("/executeApi")
 async def executeApi(request: Request):
     try:
@@ -514,7 +593,7 @@ async def executeApi(request: Request):
         # 返回所有执行结果
         success_count = sum(1 for r in results if r["status"] == "success")
         total_count = len(results)
-        
+
         return {
             "success": True,
             "message": f"执行完成: 成功 {success_count}/{total_count}",
