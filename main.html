@@ -656,6 +656,7 @@
                     <input type="checkbox" name="setTrace" value="true"><br><br>
 
                     <button type="submit">生成脚本文件</button>
+                    <button type="button" id="generateApiFile" style="margin-left: 10px;">生成脚本API文件</button>
                 </form>
             </div>
 
@@ -1563,36 +1564,20 @@
         }
     }
 
+    // 新增生成脚本API文件按钮的点击事件
+    document.getElementById('generateApiFile').addEventListener('click', async () => {
+        const formData = new FormData(document.getElementById('uploadForm'));
+        formData.append('fileType', 1); // 添加额外参数
 
+        const response = await fetch('http://127.0.0.1:8000/api/upload', {
+            method: 'POST',
+            body: formData
+        });
 
-    // 处理API执行表单提交
-    document.getElementById('apiExecutionForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const name = document.getElementById('apiName').value;
-        const data = document.getElementById('apiData').value;
-
-        try {
-            const response = await fetch('http://127.0.0.1:8000/api/batchExecute', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ name, data })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert(`请求成功：${result.message}`);
-            } else {
-                alert(`请求失败：${result.message}`);
-            }
-
-            closeApiExecutionModal();
-
-        } catch (error) {
-            alert('执行请求时发生错误：' + error.message);
+        if (response.ok) {
+            alert('API文件生成成功！');
+        } else {
+            alert('API文件生成失败，请检查输入。');
         }
     });
 </script>

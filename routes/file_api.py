@@ -188,10 +188,17 @@ def run_pytest(trace: str):
 
 
 @app.post("/upload", summary="生成脚本文件")
-def upload_code(filename: str = Form(...), code: str = Form(...)):
+def upload_code(filename: str = Form(...), code: str = Form(...),fileType: str = Form(None)):
     logger.info(f"upload_code|请求参数1 filename:{filename},code:{code}")
-    if not filename.endswith('.py'):
-        filename += '.py'  # 自动添加 .py 扩展名
+    # 根据 fileType 修改文件名逻辑
+    if fileType and fileType == "1":
+        if not filename.endswith('.py'):
+            filename += '_API.py'  # 自动添加 _API.py 扩展名
+        else:
+            filename = filename.replace('.py', '_API.py')
+    else:
+        if not filename.endswith('.py'):
+            filename += '.py'  # 自动添加 .py 扩展名
 
     if not code:
         raise HTTPException(status_code=400, detail="No code provided.")
@@ -205,7 +212,7 @@ def upload_code(filename: str = Form(...), code: str = Form(...)):
         # 将代码写入指定的 .py 文件
         with open(file_path, 'w') as file:
             file.write(modified_code)
-        insert_script_info(filename[:-3], "暂未执行")
+        insert_script_info(filename, "暂未执行")
         return JSONResponse(content={"message": "Python script created successfully!", "filename": filename})
     except Exception as e:
         logger.error(f"upload_code|服务异常{e}")
