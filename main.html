@@ -745,29 +745,12 @@
         </div>
     </div>
 </div>
-<!-- 添加API执行模态框 -->
-<div id="apiExecutionModal" class="modal">
-    <div class="modal-content">
-        <span class="close-modal" onclick="closeApiExecutionModal()">&times;</span>
-        <h2>脚本模拟</h2>
-        <form id="apiExecutionForm">
-            <label for="apiName">脚本名称:</label>
-            <input type="text" id="apiName" required>
-
-            <label for="apiData">请求数据集合(json格式):</label>
-            <textarea id="apiData" required></textarea>
-
-            <button type="submit" class="save-btn">执行请求</button>
-        </form>
-    </div>
-</div>
-
 
 <!-- 添加批量API请求模态框 -->
 <div id="batchApiModal" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="closeBatchApiModal()">&times;</span>
-        <h2>API执行</h2>
+        <h2>脚本模拟</h2>
         <form id="batchApiForm" class="batch-api-form">
             <div>
                 <label for="scriptName">脚本名称:</label>
