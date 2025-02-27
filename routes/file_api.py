@@ -191,13 +191,7 @@ def run_pytest(trace: str):
 def upload_code(filename: str = Form(...), code: str = Form(...),fileType: str = Form(None)):
     logger.info(f"upload_code|请求参数1 filename:{filename},code:{code}")
     # 根据 fileType 修改文件名逻辑
-    if fileType and fileType == "1":
-        if not filename.endswith('.py'):
-            filename += '_API.py'  # 自动添加 _API.py 扩展名
-        else:
-            filename = filename.replace('.py', '_API.py')
-    else:
-        if not filename.endswith('.py'):
+    if not filename.endswith('.py'):
             filename += '.py'  # 自动添加 .py 扩展名
 
     if not code:
@@ -480,8 +474,8 @@ async def batchExecute(request: Request):
         # 获取当前工作目录
         current_directory = os.getcwd()
         # 确保脚本名是以 '.py' 结尾
-        if not name.endswith('_API.py'):
-            name += '_API.py'  # 自动添加 '.py' 后缀
+        if not name.endswith('.py'):
+            name += '.py'  # 自动添加 '.py' 后缀
         # 解析JSON字符串为列表
         data_list = json.loads(data)
         if not isinstance(data_list, list):

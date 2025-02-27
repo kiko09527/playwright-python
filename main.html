@@ -647,16 +647,17 @@
             <div style="margin-top: 20px;">
                 <form id="uploadForm" action="http://127.0.0.1:8000/api/upload" method="post">
                     <label for="filename">脚本名称:</label>
-                    <input type="text" name="filename" placeholder="请输入脚本名称" required><br><br>
+                    <input type="text" name="filename" placeholder='脚本名称必须"test_"结尾；如果支持脚本模拟必须"_api_test_"结尾' required oninput="validateFilename(this)">
+                    <div id="filenameError" style="color: red;"></div>
 
-                    <label for="code">Python 代码:</label><br>
+                    <label for="code" style="margin-top: 50px;">Python 代码:</label><br>
                     <textarea name="code" rows="10" cols="30" placeholder="Write your Python code here..." required></textarea><br><br>
 
                     <label for="set_trace">启用追踪:</label>
                     <input type="checkbox" name="setTrace" value="true"><br><br>
 
                     <button type="submit">生成脚本文件</button>
-                    <button type="button" id="generateApiFile" style="margin-left: 10px;">生成脚本API文件</button>
+<!--                    <button type="button" id="generateApiFile" style="margin-left: 10px;">生成脚本API文件</button>-->
                 </form>
             </div>
 
@@ -1408,7 +1409,7 @@
 
     const MAX_API_ITEMS = 3; // 定义最大请求项数量
 
-    function addApiItem() {
+    function addApiItem(scriptName) {
         const itemsContainer = document.getElementById('batchApiItems');
 
         // 检查当前请求项数量
@@ -1580,6 +1581,18 @@
             alert('API文件生成失败，请检查输入。');
         }
     });
+
+    // 校验文件名称
+    function validateFilename(input) {
+        const value = input.value;
+        const errorMessage = document.getElementById('filenameError');
+
+        if (value && !value.endsWith('test_')) {
+            errorMessage.textContent = '文件名称必须以 "test_" 结尾';
+        } else {
+            errorMessage.textContent = '';
+        }
+    }
 </script>
 </body>
 </html>

@@ -61,7 +61,6 @@ def save_script_log(script_name, post_data, mode, status, msg):
 def insert_script_info(script_name, last_exec_status):
     logger.info(f"insert_script_info|请求参数 script_name: {script_name}, last_exec_status: {last_exec_status}")
     script_name = script_name.replace(".py", "")
-    script_name = script_name.replace("_API", "")
     # 初始化数据库连接和游标
     connection = None
     cursor = None
@@ -95,10 +94,7 @@ def insert_script_info(script_name, last_exec_status):
 def update_script_execute_log(script_id, new_status, new_msg,script_name):
     logger.info(f"update_script_execute_log|请求参数 new_status: {new_status}")
     # 去掉 .py 后缀如果存在
-    if script_name.endswith('.py'):
-        script_name = script_name[:-3]
     script_name = script_name.replace(".py", "")
-    script_name = script_name.replace("_API", "")
     connection = None
     cursor = None
     try:
