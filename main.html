@@ -664,9 +664,9 @@
             <div class="script-list">
                 <h2>脚本文件列表</h2>
                 <div class="search-box">
-                    <input 
-                        type="text" 
-                        id="searchScriptName" 
+                    <input
+                        type="text"
+                        id="searchScriptName"
                         placeholder="请输入脚本名称搜索..."
                         class="search-input"
                     >
@@ -679,9 +679,9 @@
 
         <!-- Tab 2 内容 -->
         <div class="tab-content">
-            <iframe 
-                id="aiAssistantFrame" 
-                src="http://127.0.0.1:7788/" 
+            <iframe
+                id="aiAssistantFrame"
+                src="http://127.0.0.1:7788/"
                 style="width: 100%; height: 800px; border: none; border-radius: 8px;"
             ></iframe>
         </div>
@@ -705,10 +705,10 @@
 
             <label for="modalExecuteTime">执行时间:</label>
             <input type="text" id="modalExecuteTime">
-            
+
             <label for="modalNeedApi">过滤请求前缀:</label>
             <input type="text" id="modalNeedApi">
-            
+
             <label for="modalFilteredApis">需要的API集合:</label>
             <input type="text" id="modalFilteredApis">
 
@@ -862,7 +862,11 @@
                     <button class="debug-btn" onclick="debugScript('${script.script_name}')">调试</button>
                     <button class="report-btn" onclick="showReport('${script.script_name}')">Trace跟踪</button>
                     <button class="api-btn" onclick="openApiDocs('${script.script_name}')">Swagger</button>
-                    <button class="api-btn" onclick="openBatchApi('${script.script_name}')">脚本模拟</button>
+                    <button class="api-btn"
+                        onclick="openBatchApi('${script.script_name}')"
+                        ${script.script_name.endsWith('_api_test_') ? '' : 'disabled style="background-color: #ccc; cursor: not-allowed;"'}>
+                        脚本模拟
+                    </button>
                     <button class="log-btn" onclick="showLogs('${script.script_name}')">执行日志</button>
                     <button class="api-list-btn" onclick="showApiList('${script.script_name}')">接口列表</button>
                     <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}','${script.delete_apis || ''}')">设置</button>
