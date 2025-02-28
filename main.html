@@ -745,7 +745,7 @@
 
 <!-- 添加日志模态框 -->
 <div id="logModal" class="modal">
-    <div class="modal-content" style="max-width: 800px;">
+    <div class="modal-content" style="max-width: 900px;">
         <span class="close-modal" onclick="closeLogModal()">&times;</span>
         <h2>执行日志</h2>
         <div id="logList"></div>
@@ -759,10 +759,12 @@
 
 <!-- 添加接口列表模态框 -->
 <div id="apiModal" class="modal">
-    <div class="modal-content" style="max-width: 900px;">
+    <div class="modal-content" style="max-width: 900px; overflow: hidden;">
         <span class="close-modal" onclick="closeApiModal()">&times;</span>
         <h2>接口列表</h2>
-        <div id="apiList" style="height: 1000px;overflow: hidden auto"></div>
+        <div style="height: 60vh;overflow: hidden auto">
+        <div id="apiList"></div>
+    </div>
         <div class="pagination">
             <button id="apiPrevPage" onclick="changeApiPage(-1)">上一页</button>
             <span id="apiPageInfo">第 1 页</span>
@@ -843,6 +845,14 @@
     </div>
 </div>
 
+<!-- 添加iframe于嵌入API文档 -->
+ <div id="apiFrameMask" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999; background: rgba(0, 0, 0, 0.5);"></div>
+<div id="apiFrameContent" style="display: none; justify-content: center; align-items: center; width: 80vw; height: 80vh; position: fixed; top: 5vh;
+ left: 5vw; right: 0; bottom: 0; z-index: 1000;background: #fff; padding: 20px;">
+    <span class="close-modal" onclick="closeApiFrameContent()">x</span>
+    <!-- 添加iframe用于嵌入API文档 -->
+    <iframe id="apiFrame" style="width: 80%; height: 100%; border: none; border-radius: 8px;"></iframe>
+</div>
 <script>
     let currentPage = 1;
     const pageSize = 10;
@@ -924,7 +934,6 @@
                     <button class="execute-btn" onclick="executeScript('${script.script_name}')">执行</button>
                     <button class="debug-btn" onclick="debugScript('${script.script_name}')">调试</button>
                     <button class="report-btn" onclick="showReport('${script.script_name}')">Trace跟踪</button>
-                    <button class="api-btn" onclick="openApiDocs('${script.script_name}')">Swagger</button>
                     <button class="api-btn"
                         onclick="openBatchApi('${script.script_name}')"
                         ${script.script_name.endsWith('_api_test_') ? '' : 'disabled style="background-color: #ccc; cursor: not-allowed;"'}>
@@ -932,6 +941,7 @@
                     </button>
                     <button class="log-btn" onclick="showLogs('${script.script_name}')">执行日志</button>
                     <button class="api-list-btn" onclick="showApiList('${script.script_name}')">接口列表</button>
+                    <button class="api-btn" onclick="openApiDocs('${script.script_name}')">Swagger</button>
                     <button class="settings-btn" style="background-color: #28a745; color: white;" onclick="openHttpSettings('${script.script_name}', '${script.need_api || ''}')">设置</button>
                 </div>
             `;
@@ -1182,8 +1192,20 @@
 
     // 打开API文档
     function openApiDocs(scriptName) {
-        const url = `http://127.0.0.1:8000/${scriptName}/docs#/default/execute_execute_post`;
-        window.open(url, '_blank');
+        console.log('Function called with scriptName:', scriptName);
+        const url = `http://127.0.0.1:8000/api/docs#/default/execute_execute_post`;
+        const apiFrame = document.getElementById('apiFrame'); // 获取iframe元素
+        apiFrame.src = url; // 设置iframe的src属性
+        const apiFrameContent = document.getElementById('apiFrameContent'); // 获取iframe内容容器
+        apiFrameContent.style.display = 'flex'; // 显示iframe
+        const apiFrameMask = document.getElementById('apiFrameMask'); // 获取遮罩层元素
+        apiFrameMask.style.display = 'block'; // 显示遮罩层
+    }
+    function closeApiFrameContent() {
+        const apiFrameContent = document.getElementById('apiFrameContent'); // 获取iframe内容容器
+        apiFrameContent.style.display = 'none'; // 隐藏iframe
+        const apiFrameMask = document.getElementById('apiFrameMask'); // 获取遮罩层元素
+        apiFrameMask.style.display = 'none'; // 隐藏遮罩层
     }
 
     // 日志相关变量
