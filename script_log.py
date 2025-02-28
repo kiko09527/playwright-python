@@ -184,7 +184,7 @@ def update_script_execute_log_api(script_id, new_status, new_msg, script_name, t
         """
         # 执行更新操作
         cursor.execute(update_query, (new_status, json.dumps(new_msg), script_id))
-        if totalCount != currentCount:
+        if totalCount > 1:
             new_status = f"【{new_status}】"
         # 根据 currentCount 的值更新 script_info 表的 last_exec_status
         if currentCount == 1:

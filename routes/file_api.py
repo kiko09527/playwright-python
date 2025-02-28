@@ -510,7 +510,7 @@ async def batchExecute(request: Request):
                 currentCount = index + 1
                 totalCount = len(data_list)
                 # 将 保存日志
-                log_id = save_script_log(name, data_item, "API", "正在执行..", "脚本正在执行,请耐心等候")  # 保存日志
+                log_id = save_script_log(name, json.dumps(data_item), "API", "正在执行..", "脚本正在执行,请耐心等候")  # 保存日志
                 # 将 data_item 转换为字符串
                 command = [
                     "python", script_path,
@@ -521,7 +521,7 @@ async def batchExecute(request: Request):
                 result = subprocess.run(command, capture_output=True, text=True, check=True)
                 logger.info(f"batchExecute|命令输出: {result.stdout.strip()}")  # 记录命令输出
                 output = result.stdout.strip()
-                logger.error(f"batchExecute|执行成功{output}")
+                logger.info(f"batchExecute|执行成功{output}")
                 # 处理响应
                 results.append({
                     "status": "success",
@@ -529,8 +529,7 @@ async def batchExecute(request: Request):
                     "data": data_item,
                     "response": output
                 })
-                update_script_execute_log(log_id, "执行成功", "Script executed successfully.", name, totalCount,
-                                          currentCount)
+                update_script_execute_log_api(log_id, "执行成功", "Script executed successfully.", name, totalCount,currentCount)
             except subprocess.CalledProcessError as e:
                 logger.error(f"batchExecute|CalledProcessError服务异常: {e.stderr.strip()}")  # 记录标准错误输出
                 update_script_execute_log_api(log_id, "执行失败", e.stderr.strip(), name, totalCount, currentCount)
