@@ -15,6 +15,7 @@ db_config = {
     'database': 'autotest'  # 数据库名称
 }
 
+
 def query_script_info(script_name):
     logger.info(f"query_script_info|请求参数 script_name: {script_name}")
     script_name = script_name.replace(".py", "")
@@ -44,6 +45,8 @@ def query_script_info(script_name):
             cursor.close()
         if connection:
             connection.close()
+
+
 def save_script_log(script_name, post_data, mode, status, msg):
     cursor = None
     connection = None
@@ -86,6 +89,7 @@ def save_script_log(script_name, post_data, mode, status, msg):
         if connection:
             connection.close()
 
+
 def insert_script_info(script_name, last_exec_status):
     logger.info(f"insert_script_info|请求参数 script_name: {script_name}, last_exec_status: {last_exec_status}")
     script_name = script_name.replace(".py", "")
@@ -119,7 +123,8 @@ def insert_script_info(script_name, last_exec_status):
         if connection:
             connection.close()
 
-def update_script_execute_log(script_id, new_status, new_msg,script_name):
+
+def update_script_execute_log(script_id, new_status, new_msg, script_name):
     logger.info(f"update_script_execute_log|请求参数 new_status: {new_status}")
     # 去掉 .py 后缀如果存在
     script_name = script_name.replace(".py", "")
@@ -145,6 +150,57 @@ def update_script_execute_log(script_id, new_status, new_msg,script_name):
             WHERE script_name = %s
         """
         cursor.execute(update_info_query, (new_status, script_name))
+
+        # 提交更新操作
+        connection.commit()
+
+        if cursor.rowcount == 0:
+            logger.warning(f"update_script_execute_log|未找到 ID 为 {script_id} 的记录。")
+
+    except Exception as e:
+        logger.error(f"update_script_execute_log|数据库操作异常: {e}")
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+def update_script_execute_log_api(script_id, new_status, new_msg, script_name, totalCount, currentCount):
+    logger.info(f"update_script_execute_log_api|请求参数 new_status: {new_status}")
+    # 去掉 .py 后缀如果存在
+    script_name = script_name.replace(".py", "")
+    connection = None
+    cursor = None
+    try:
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+
+        # 更新状态和消息的 SQL 查询
+        update_query = """
+            UPDATE script_execute_log 
+            SET status = %s, msg = %s
+            WHERE id = %s
+        """
+        # 执行更新操作
+        cursor.execute(update_query, (new_status, json.dumps(new_msg), script_id))
+        if totalCount != currentCount:
+            new_status = f"【{new_status}】"
+        # 根据 currentCount 的值更新 script_info 表的 last_exec_status
+        if currentCount == 1:
+            update_info_query = """
+                UPDATE script_info 
+                SET last_exec_status = %s
+                WHERE script_name = %s
+            """
+            cursor.execute(update_info_query, (new_status, script_name))
+        else:
+            update_info_query = """
+                UPDATE script_info 
+                SET last_exec_status =  CONCAT(last_exec_status, %s)
+                WHERE script_name = %s
+            """
+            cursor.execute(update_info_query, (new_status, script_name))
 
         # 提交更新操作
         connection.commit()

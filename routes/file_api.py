@@ -2,7 +2,8 @@ from fastapi import FastAPI, HTTPException, Query, Path, Request, Form
 from fastapi.responses import JSONResponse
 import subprocess
 import json
-from script_log import save_script_log, update_script_execute_log, insert_script_info, query_script_info
+from script_log import save_script_log, update_script_execute_log, insert_script_info, query_script_info, \
+    update_script_execute_log_api
 from pydantic import BaseModel
 import os
 import logging
@@ -495,9 +496,13 @@ async def batchExecute(request: Request):
 
         results = []
         # 循环处理每个请求
-        for data_item in data_list:
+        for index, data_item in enumerate(data_list):
             try:
-                log_id = save_script_log(name, name, "API", "正在执行..", "脚本正在执行,请耐心等候")  # 保存日志
+                # 获取当前计数
+                currentCount = index + 1
+                totalCount = len(data_list)
+                # 将 保存日志
+                log_id = save_script_log(name, data_item, "API", "正在执行..", "脚本正在执行,请耐心等候")  # 保存日志
                 # 将 data_item 转换为字符串
                 command = [
                     "python", script_path,
@@ -516,10 +521,11 @@ async def batchExecute(request: Request):
                     "data": data_item,
                     "response": output
                 })
-                update_script_execute_log(log_id, "执行成功", "Script executed successfully.", name)
+                update_script_execute_log(log_id, "执行成功", "Script executed successfully.", name, totalCount,
+                                          currentCount)
             except subprocess.CalledProcessError as e:
                 logger.error(f"batchExecute|CalledProcessError服务异常: {e.stderr.strip()}")  # 记录标准错误输出
-                update_script_execute_log(log_id, "执行失败", e.stderr.strip(), name)
+                update_script_execute_log_api(log_id, "执行失败", e.stderr.strip(), name, totalCount, currentCount)
                 results.append({
                     "status": "error",
                     "message": str(e),
@@ -527,7 +533,7 @@ async def batchExecute(request: Request):
                 })
             except Exception as e:
                 logger.error(f"batchExecute|服务异常{e}")
-                update_script_execute_log(log_id, "执行失败", str(e), name)
+                update_script_execute_log_api(log_id, "执行失败", str(e), name, totalCount, currentCount)
                 results.append({
                     "status": "error",
                     "message": str(e),
