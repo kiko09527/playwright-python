@@ -202,9 +202,13 @@ def upload_code(filename: str = Form(...), code: str = Form(...), fileType: str 
     existing_script = query_script_info(filename)
     if existing_script:
         logger.warning(f"upload_code|脚本名称 '{filename}' 已存在，无法重复上传。")
-        return JSONResponse(content={"error": "Script already exists."}, status_code=400)
+        raise HTTPException(status_code=400, detail="Script already exists.")
 
-    modified_code = genera_python_code.modify_code(code, filename)
+    # 判断 fileType 是否存在并且等于 1
+    if not (fileType is not None and fileType == "1"):
+        modified_code = code  # 如果fileType是1,则直接使用code
+    else:
+        modified_code = genera_python_code.modify_code(code, filename)
 
     # 生成完整文件路径
     file_path = os.path.join(UPLOAD_FOLDER, filename)

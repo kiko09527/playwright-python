@@ -656,8 +656,8 @@
                     <label for="set_trace">启用追踪:</label>
                     <input type="checkbox" name="setTrace" value="true"><br><br>
 
-                    <button type="submit">生成脚本文件</button>
-<!--                    <button type="button" id="generateApiFile" style="margin-left: 10px;">生成脚本API文件</button>-->
+                    <button type="submit" onclick="validateFilenameBeforeSubmit()">生成脚本文件</button>
+                    <button type="button" id="generateApiFile" style="margin-left: 10px;" onclick="validateApiFileName()">生成脚本API文件</button>
                 </form>
             </div>
 
@@ -1570,21 +1570,35 @@
     }
 
     // 新增生成脚本API文件按钮的点击事件
-    document.getElementById('generateApiFile').addEventListener('click', async () => {
+    function validateApiFileName() {
+        const filenameInput = document.querySelector('input[name="filename"]');
+        const filename = filenameInput.value.trim();
+        
+        if (!filename.endsWith('_api_test_')) {
+            alert('脚本名称必须以 "_api_test_" 结尾');
+            return;
+        }
+
+        // 如果验证通过，继续执行生成API文件的逻辑
+        generateApiFile();
+    }
+
+    function generateApiFile() {
         const formData = new FormData(document.getElementById('uploadForm'));
         formData.append('fileType', 1); // 添加额外参数
 
-        const response = await fetch('http://127.0.0.1:8000/api/upload', {
+        fetch('http://127.0.0.1:8000/api/upload', {
             method: 'POST',
             body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('API文件生成成功！');
+            } else {
+                alert('API文件生成失败，请检查输入。');
+            }
         });
-
-        if (response.ok) {
-            alert('API文件生成成功！');
-        } else {
-            alert('API文件生成失败，请检查输入。');
-        }
-    });
+    }
 
     // 校验文件名称
     function validateFilename(input) {
@@ -1596,6 +1610,19 @@
         } else {
             errorMessage.textContent = '';
         }
+    }
+
+    function validateFilenameBeforeSubmit() {
+        const filenameInput = document.querySelector('input[name="filename"]');
+        const filename = filenameInput.value.trim();
+        
+        if (!filename.endsWith('test_')) {
+            alert('脚本名称必须以 "test_" 结尾');
+            return false; // 阻止表单提交
+        }
+
+        // 如果验证通过，提交表单
+        document.getElementById('uploadForm').submit();
     }
 </script>
 </body>
