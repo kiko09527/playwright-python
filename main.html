@@ -122,7 +122,7 @@
         }
 
         .search-button {
-            padding: 10px 20px;
+            padding: 0px 20px;
             background-color: var(--primary-color);
             color: white;
             border: none;
@@ -674,7 +674,7 @@
                     <div id="filenameError" style="color: red;"></div>
 
                     <label for="code" style="margin-top: 50px;">Python 代码:</label><br>
-                    <textarea name="code" rows="10" cols="30" placeholder="Write your Python code here..." required></textarea><br><br>
+                    <textarea name="code" rows="10" cols="30" placeholder="请输入Python脚本代码..." required></textarea><br><br>
 
                     <label for="set_trace">启用追踪:</label>
                     <input type="checkbox" name="setTrace" value="true"><br><br>
@@ -690,7 +690,7 @@
                     <input
                         type="text"
                         id="searchScriptName"
-                        placeholder="请输入脚本名称搜索..."
+                        placeholder="请输入脚本名称..."
                         class="search-input"
                     >
                     <button id="searchButton" class="search-button">搜索</button>
@@ -942,7 +942,7 @@
                     <button class="log-btn" onclick="showLogs('${script.script_name}')">执行日志</button>
                     <button class="api-list-btn" onclick="showApiList('${script.script_name}')">接口列表</button>
                     <button class="api-btn" onclick="openApiDocs('${script.script_name}')">Swagger</button>
-                    <button class="settings-btn" style="background-color: #28a745; color: white;" onclick="openHttpSettings('${script.script_name}', '${script.need_api || ''}')">设置</button>
+                                       <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}','${script.delete_apis || ''}')">设置</button>
                 </div>
             `;
             scriptDataDiv.appendChild(scriptElement);
