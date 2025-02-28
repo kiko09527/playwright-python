@@ -313,6 +313,7 @@ async def query_script_log_list(
             query += " AND script_name LIKE %s"
             params.append(f"%{script_name}%")
 
+        query += " ORDER BY create_time DESC"  # 假设表中创建时间的字段名为 created_at
         query += " LIMIT %s OFFSET %s"
         params.append(page_size)
         params.append(offset)

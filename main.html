@@ -1263,8 +1263,9 @@
                     状态: ${log.status}
                 </div>
                 <div class="log-details">
-                    <div data-label="执行模式:">${log.mode}</div>
-                    <div data-label="执行信息:">${log.msg}</div>
+                    <div data-label="执行方式:">${log.mode}</div>
+                    <div data-label="请求参数:">${log.post_data}</div>
+                    <div data-label="结果信息:">${log.msg}</div>
                     <div data-label="创建时间:">${formatDateTime(log.create_time)}</div>
                     <div data-label="更新时间:">${formatDateTime(log.update_time)}</div>
                 </div>
