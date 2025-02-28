@@ -29,9 +29,9 @@ def run(playwright: Playwright, data) -> None:
         page.goto("https://sso-uat.gaojihealth.cn/login/#/")
 
         page.get_by_role("textbox", name="请输入工号/移动电话").click()
-        page.get_by_role("textbox", name="请输入工号/移动电话").fill("13581791523")
+        page.get_by_role("textbox", name="请输入工号/移动电话").fill(username)
         page.get_by_role("textbox", name="请输入密码").dblclick()
-        page.get_by_role("textbox", name="请输入密码").fill("Xifan@1007")
+        page.get_by_role("textbox", name="请输入密码").fill(username)
         page.get_by_role("button", name="登录").click()
         page.locator("div:nth-child(6) > img").click()
         with page.expect_popup() as page1_info:
