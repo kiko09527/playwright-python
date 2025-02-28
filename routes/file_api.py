@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import FastAPI, HTTPException, Query, Path, Request, Form
 from fastapi.responses import JSONResponse
 import subprocess
@@ -699,7 +701,7 @@ class HttpSettingQuery(BaseModel):
     url: str
 
 
-@app.get("/queryHttpSettingInfo")
+@app.post("/queryHttpSettingInfo")
 def queryHttpSettingInfo(query_data: HttpSettingQuery):
     # 初始化数据库连接
     connection = None
@@ -721,6 +723,9 @@ def queryHttpSettingInfo(query_data: HttpSettingQuery):
         if result is None:
             logger.warning(f"queryHttpSettingInfo|Setting not found")
             raise HTTPException(status_code=404, detail="Setting not found.")
+        for key, value in result.items():
+            if isinstance(value, datetime):
+                result[key] = value.isoformat()  # 转换为 ISO 格式字符串
         return JSONResponse(content={"setting": result})  # 返回找到的记录
     except Exception as e:
         logger.error(f"queryHttpSettingInfo|整体服务异常: {e}")

@@ -615,6 +615,29 @@
             font-size: 14px;
             line-height: 1.5;
         }
+
+        /* 美化下拉选择框 */
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+            font-size: 14px;
+            background-color: white;
+            appearance: none; /* 去掉默认样式 */
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><polygon points="0,0 10,0 5,5" fill="%234a90e2"/></svg>'); /* 自定义下拉箭头 */
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 10px;
+        }
+
+        /* 美化下拉选择框的聚焦状态 */
+        select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
     </style>
 </head>
 <body>
@@ -780,6 +803,46 @@
     </div>
 </div>
 
+<!-- 新增设置模态框 -->
+<div id="httpSettingsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeHttpSettingsModal()">&times;</span>
+        <h2>断言设置</h2>
+        <form id="httpSettingsForm" class="modal-form">
+            <input type="hidden" id="httpScriptName">
+            <label for="httpUrl">URL:</label>
+            <input type="text" id="httpUrl" required readonly style="background-color: #f0f0f0;">
+
+            <label for="assertType">断言类型:</label>
+            <select id="assertType" required>
+                <option value="文本">文本</option>
+                <option value="正则">正则</option>
+                <option value="JSONPath">JSONPath</option>
+                <option value="脚本">脚本</option>
+            </select>
+
+            <label for="ruleType">规则类型:</label>
+            <select id="ruleType" required>
+                <option value="包含">包含</option>
+                <option value="不包含">不包含</option>
+                <option value="等于">等于</option>
+            </select>
+
+            <label for="assertBodyType">断言体类型:</label>
+            <select id="assertBodyType" required>
+                <option value="响应体">响应体</option>
+                <option value="响应头">响应头</option>
+                <option value="响应码">响应码</option>
+            </select>
+
+            <label for="checkInfo">检查信息:</label>
+            <input type="text" id="checkInfo" required>
+
+            <button type="submit" class="save-btn">保存</button>
+        </form>
+    </div>
+</div>
+
 <script>
     let currentPage = 1;
     const pageSize = 10;
@@ -869,7 +932,7 @@
                     </button>
                     <button class="log-btn" onclick="showLogs('${script.script_name}')">执行日志</button>
                     <button class="api-list-btn" onclick="showApiList('${script.script_name}')">接口列表</button>
-                    <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}','${script.delete_apis || ''}')">设置</button>
+                    <button class="settings-btn" style="background-color: #28a745; color: white;" onclick="openHttpSettings('${script.script_name}', '${script.need_api || ''}')">设置</button>
                 </div>
             `;
             scriptDataDiv.appendChild(scriptElement);
@@ -1256,10 +1319,11 @@
             apiItem.className = `api-item ${api.status !== 200 ? 'error' : ''}`;
             apiItem.innerHTML = `
                 <div class="api-header">
-                    <span class="api-name">${api.script_name}</span>
+                     <button class="settings-btn" style="background-color: #28a745; color: white;" onclick="openHttpSettings('${api.script_name}', '${api.url}')">断言设置</button>
                     <span class="api-status ${api.status === 200 ? 'success' : 'error'}">
                         状态码: ${api.status}
                     </span>
+                   
                 </div>
                 <div class="api-detail-row">
                     <span>唯一标识:</span>
@@ -1624,6 +1688,74 @@
         // 如果验证通过，提交表单
         document.getElementById('uploadForm').submit();
     }
+
+    // 新增打开设置模态框的函数
+    function openHttpSettings(scriptName, url) {
+        document.getElementById('httpScriptName').value = scriptName;
+        document.getElementById('httpUrl').value = url;
+
+        // 请求设置接口
+        fetch('http://127.0.0.1:8000/api/queryHttpSettingInfo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ script_name: scriptName, url: url })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.setting) {
+                document.getElementById('httpUrl').value = data.setting.url;
+                document.getElementById('assertType').value = data.setting.assert_type;
+                document.getElementById('ruleType').value = data.setting.rule_type;
+                document.getElementById('assertBodyType').value = data.setting.assert_body_type;
+                document.getElementById('checkInfo').value = data.setting.check_info;
+            }
+            document.getElementById('httpSettingsModal').style.display = 'flex';
+        })
+        .catch(error => {
+            console.error('获取设置失败:', error);
+            alert('获取设置失败，请检查控制台。');
+        });
+    }
+
+    // 新增关闭设置模态框的函数
+    function closeHttpSettingsModal() {
+        document.getElementById('httpSettingsModal').style.display = 'none';
+    }
+
+    // 新增处理设置表单提交的函数
+    document.getElementById('httpSettingsForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const data = {
+            script_name: document.getElementById('httpScriptName').value,
+            url: document.getElementById('httpUrl').value,
+            assert_type: document.getElementById('assertType').value,
+            rule_type: document.getElementById('ruleType').value,
+            assert_body_type: document.getElementById('assertBodyType').value,
+            check_info: document.getElementById('checkInfo').value
+        };
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/updateHttpSettingInfo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error('更新失败');
+            }
+
+            alert('更新成功！');
+            closeHttpSettingsModal();
+        } catch (error) {
+            console.error('更新设置失败:', error);
+            alert('更新失败，请检查控制台。');
+        }
+    };
 </script>
 </body>
 </html>
