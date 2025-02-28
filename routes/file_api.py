@@ -192,7 +192,7 @@ def run_pytest(trace: str):
 
 @app.post("/upload", summary="生成脚本文件")
 def upload_code(filename: str = Form(...), code: str = Form(...), fileType: str = Form(None)):
-    logger.info(f"upload_code|请求参数1 filename:{filename},code:{code}")
+    logger.info(f"upload_code|请求参数 filename:{filename},code:{code},fileType:{fileType}")
     # 根据 fileType 修改文件名逻辑
     if not filename.endswith('.py'):
         filename += '.py'  # 自动添加 .py 扩展名
@@ -208,9 +208,11 @@ def upload_code(filename: str = Form(...), code: str = Form(...), fileType: str 
 
     # 判断 fileType 是否存在并且等于 1
     if not (fileType is not None and fileType == "1"):
-        modified_code = code  # 如果fileType是1,则直接使用code
-    else:
+        logger.warning(f"upload_code|原始文件")
         modified_code = genera_python_code.modify_code(code, filename)
+    else:
+        logger.warning(f"upload_code|代码补充")
+        modified_code = code  # 如果fileType是1,则直接使用code
 
     # 生成完整文件路径
     file_path = os.path.join(UPLOAD_FOLDER, filename)

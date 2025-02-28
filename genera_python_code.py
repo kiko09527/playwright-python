@@ -195,6 +195,7 @@ class CodeModifier(ast.NodeTransformer):
 
 
 def modify_code(source_code, parameter):
+    parameter = parameter.replace(".py", "")
     # 解析源代码为 AST
     tree = ast.parse(source_code)
     # 在 AST 中插入 try-finally 结构和 tracing 代码
