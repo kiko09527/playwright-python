@@ -896,6 +896,196 @@
             max-width: 455px; /* 或者其他合适的宽度 */
             width: 100%;
         }
+
+        /* 修复模态框滚动问题 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: flex-start; /* 改为顶部对齐 */
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto; /* 允许模态框内容滚动 */
+            z-index: 1000;
+        }
+
+        /* 批量API请求模态框样式优化 */
+        .batch-modal {
+            padding: 0;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            background: #fff;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .batch-modal-header {
+            background: linear-gradient(135deg, var(--primary-color), #357abd);
+            padding: 24px 32px;
+            border-radius: 16px 16px 0 0;
+            flex-shrink: 0;
+        }
+
+        .batch-modal-header h2 {
+            color: #fff;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.8);
+            margin: 8px 0 0;
+            font-size: 14px;
+        }
+
+        .batch-api-form {
+            padding: 24px 32px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #2c3e50;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .label-hint {
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: normal;
+        }
+
+        .batch-items-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .batch-api-item {
+            position: relative;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;  /* 添加间距 */
+        }
+
+        .batch-api-input {
+            flex: 1;  /* 让输入框占据剩余空间 */
+            min-height: 60px;  /* 设置最小高度 */
+            resize: vertical;  /* 允许垂直拉伸 */
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-family: monospace;  /* 使用等宽字体 */
+            font-size: 14px;
+        }
+
+        .batch-api-controls {
+            display: flex;
+            flex-direction: column;  /* 按钮垂直排列 */
+            gap: 5px;
+        }
+
+        .add-api-btn, .remove-api-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 30px;  /* 固定按钮宽度 */
+            height: 30px;  /* 固定按钮高度 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-api-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .remove-api-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .execute-batch-btn {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 16px;
+        }
+
+        .execute-batch-btn:hover {
+            background: #357abd;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(74,144,226,0.2);
+        }
+
+        .form-input-disabled {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            width: 100%;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 640px) {
+            .batch-modal {
+                width: 95%;
+                max-height: 95vh;
+            }
+            
+            .batch-modal-header {
+                padding: 20px 24px;
+            }
+            
+            .batch-api-form {
+                padding: 20px 24px;
+            }
+            
+            .batch-api-item {
+                flex-direction: column;
+            }
+            
+            .batch-api-controls {
+                flex-direction: row;
+                justify-content: flex-end;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1060,28 +1250,39 @@
 
 <!-- 添加批量API请求模态框 -->
 <div id="batchApiModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content batch-modal">
         <span class="close-modal" onclick="closeBatchApiModal()">&times;</span>
-        <h2>脚本模拟</h2>
+        <div class="batch-modal-header">
+            <h2>脚本模拟</h2>
+            <p class="subtitle">批量执行API请求</p>
+        </div>
+        
         <form id="batchApiForm" class="batch-api-form">
-            <div>
-                <label for="scriptName">脚本名称:</label>
-
-                <input type="text" id="scriptName" required class="modal-form-input form-input-disabled" style="width: 100%;" required readonly>
+            <div class="form-group">
+                <label for="scriptName">脚本名称</label>
+                <input 
+                    type="text" 
+                    id="scriptName" 
+                    required 
+                    class="modal-form-input form-input-disabled" 
+                    readonly
+                >
             </div>
 
-
-
-            <div class="input-overlay" title="脚本名称不可修改"></div>
-
-            <div>
-                <label for="batchApiItems">请求体(json格式):</label>
-                <div id="batchApiItems">
+            <div class="form-group">
+                <label for="batchApiItems">
+                    请求体 
+                    <span class="label-hint">(JSON格式)</span>
+                </label>
+                <div id="batchApiItems" class="batch-items-container">
                     <!-- API请求项将在这里动态添加 -->
                 </div>
             </div>
 
-            <button type="submit" class="save-btn">执行请求</button>
+            <button type="submit" class="execute-batch-btn">
+                <span class="btn-icon">▶</span>
+                <span class="btn-text">执行请求</span>
+            </button>
         </form>
     </div>
 </div>
