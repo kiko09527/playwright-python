@@ -1199,17 +1199,17 @@
             </div>
 
             <div class="form-group">
-                <label for="modalNeedApi">过滤请求前缀</label>
+                <label for="modalNeedApi">指定API前缀</label>
                 <input type="text" id="modalNeedApi" class="form-input">
             </div>
 
             <div class="form-group">
-                <label for="modalFilteredApis">需要的API集合</label>
+                <label for="modalFilteredApis">所需API集合</label>
                 <input type="text" id="modalFilteredApis" class="form-input">
             </div>
 
             <div class="form-group">
-                <label for="modalDeleteApis">过滤的API集合</label>
+                <label for="modalDeleteApis">过滤API集合</label>
                 <input type="text" id="modalDeleteApis" class="form-input">
             </div>
 
@@ -1271,7 +1271,7 @@
 
             <div class="form-group">
                 <label for="batchApiItems">
-                    请求体 
+                    CASE请求体
                     <span class="label-hint">(JSON格式)</span>
                 </label>
                 <div id="batchApiItems" class="batch-items-container">
@@ -1383,7 +1383,7 @@
                 <div class="script-info-container">
                     <div class="info-grid">
                         <div class="info-item">
-                            <span class="info-label">最近一次执行结果:</span>
+                            <span class="info-label">最近一次执行状态:</span>
                             <span class="info-value" style="color: ${
                                 script.last_exec_status
                                     ? (script.last_exec_status.includes('失败') || script.last_exec_status.includes('异常')
@@ -1396,7 +1396,7 @@
                             }">${script.last_exec_status || '暂无'}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">指定URL:</span>
+                            <span class="info-label">指定API前缀:</span>
                             <span class="info-value">${script.need_api || '暂无'}</span>
                         </div>
                         <div class="info-item">
@@ -1413,11 +1413,11 @@
                         </div>
                         <div class="info-item">
                             <span class="info-label">执行时间:</span>
-                            <span class="info-value">${script.execute_time || '暂无'}</span>
+                            <span class="info-value">${formatDateTime(script.execute_time) || '暂无'}</span>
                         </div>
 
                         <div class="info-item full-width">
-                            <span class="info-label">需要的API集合:</span>
+                            <span class="info-label">所需API集合:</span>
                             <div class="api-tags">
                                 ${
                                     script.filtered_apis
@@ -1429,7 +1429,7 @@
                             </div>
                         </div>
                         <div class="info-item full-width">
-                            <span class="info-label">过滤的API集合:</span>
+                            <span class="info-label">过滤API集合:</span>
                             <div class="api-tags">
                                 ${
                                     script.delete_apis
@@ -1801,8 +1801,8 @@
                     状态: ${log.status}
                 </div>
                 <div class="log-details">
-                    <div data-label="执行方式:">${log.mode}</div>
-                    <div data-label="请求参数:">${log.post_data}</div>
+                    <div data-label="运行方式:">${log.mode}</div>
+                    <div data-label="请求参数(post):">${log.post_data}</div>
                     <div data-label="结果信息:">${log.msg}</div>
                     <div data-label="创建时间:">${formatDateTime(log.create_time)}</div>
                     <div data-label="更新时间:">${formatDateTime(log.update_time)}</div>
