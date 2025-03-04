@@ -724,6 +724,178 @@
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+
+        .settings-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            width: 90%;
+            max-width: 560px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+            position: relative;
+        }
+
+        .settings-title {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 32px 0;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #eef2f7;
+        }
+
+        .settings-form {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            color: #4a5568;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #2d3748;
+            transition: all 0.2s ease;
+            background-color: white;
+        }
+
+        .form-input:hover,
+        .form-select:hover {
+            border-color: #cbd5e0;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+            outline: none;
+        }
+
+        .form-input::placeholder {
+            color: #a0aec0;
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a5568' d='M6 8.825L1.175 4 2.238 2.938 6 6.7l3.763-3.763L10.825 4z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+
+        .save-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.2);
+        }
+
+        .save-btn:active {
+            transform: translateY(0);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            font-size: 24px;
+            color: #a0aec0;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #f7fafc;
+        }
+
+        .close-modal:hover {
+            color: #4a5568;
+            background: #edf2f7;
+        }
+        .form-input-disabled {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+            border-color: #e2e8f0;
+        }
+
+        /* 添加动画效果 */
+        .modal {
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-content {
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 640px) {
+            .settings-modal {
+                padding: 24px;
+                width: 95%;
+            }
+
+            .settings-title {
+                font-size: 20px;
+                margin-bottom: 24px;
+            }
+
+            .form-group {
+                gap: 6px;
+            }
+        }
+
+        .form-input-short {
+            max-width: 455px; /* 或者其他合适的宽度 */
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -804,37 +976,54 @@
 
 <!-- 修改设置模态框的结构 -->
 <div id="settingsModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content settings-modal">
         <span class="close-modal" onclick="closeSettingsModal()">&times;</span>
-        <h2>脚本设置</h2>
-        <form id="settingsForm" class="modal-form">
+        <h2 class="settings-title">设置</h2>
+        <form id="settingsForm" class="settings-form">
             <input type="hidden" id="scriptId">
 
-            <label for="modalScriptName">脚本名称:</label>
-            <input type="text" id="modalScriptName" required>
+            <div class="form-group">
+                <label for="modalScriptName">脚本名称</label>
+                <div class="input-wrapper">
+                    <input type="text" id="modalScriptName" class="form-input form-input-disabled" required readonly>
+                    <div class="input-overlay" title="脚本名称不可修改"></div>
+                </div>
+            </div>
 
-            <label for="modalExecuteMode">执行方式:</label>
-            <select id="modalExecuteMode" required>
-                <option value="specified">按指定时间执行</option>
-                <option value="cycle">按日期循环执行</option>
-            </select>
+            <div class="form-group">
+                <label for="modalExecuteMode">执行方式</label>
+                <select id="modalExecuteMode" class="form-select" required>
+                    <option value="specified">按指定时间执行</option>
+                    <option value="cycle">按日期循环执行</option>
+                </select>
+            </div>
 
-            <label for="modalExecuteTime">执行时间:</label>
-            <input type="datetime-local" id="modalExecuteTime" step="1">
+            <div class="form-group">
+                <label for="modalExecuteTime">执行时间</label>
+                <input type="datetime-local" id="modalExecuteTime" class="form-input form-input-short" step="1">
+            </div>
 
-            <label for="modalSendEmail">发送邮箱:</label>
-            <input type="email" id="modalSendEmail" placeholder="请输入邮箱地址">
+            <div class="form-group">
+                <label for="modalSendEmail">发送邮箱</label>
+                <input type="email" id="modalSendEmail" class="form-input form-input-short" placeholder="请输入邮箱地址">
+            </div>
 
-            <label for="modalNeedApi">过滤请求前缀:</label>
-            <input type="text" id="modalNeedApi">
+            <div class="form-group">
+                <label for="modalNeedApi">过滤请求前缀</label>
+                <input type="text" id="modalNeedApi" class="form-input">
+            </div>
 
-            <label for="modalFilteredApis">需要的API集合:</label>
-            <input type="text" id="modalFilteredApis">
+            <div class="form-group">
+                <label for="modalFilteredApis">需要的API集合</label>
+                <input type="text" id="modalFilteredApis" class="form-input">
+            </div>
 
-            <label for="modalDeleteApis">过滤的API集合:</label>
-            <input type="text" id="modalDeleteApis">
+            <div class="form-group">
+                <label for="modalDeleteApis">过滤的API集合</label>
+                <input type="text" id="modalDeleteApis" class="form-input">
+            </div>
 
-            <button type="submit" class="save-btn">保存</button>
+            <button type="submit" class="save-btn">保存设置</button>
         </form>
     </div>
 </div>
@@ -877,8 +1066,13 @@
         <form id="batchApiForm" class="batch-api-form">
             <div>
                 <label for="scriptName">脚本名称:</label>
-                <input type="text" id="scriptName" required class="modal-form-input" style="width: 100%;">
+
+                <input type="text" id="scriptName" required class="modal-form-input form-input-disabled" style="width: 100%;" required readonly>
             </div>
+
+
+
+            <div class="input-overlay" title="脚本名称不可修改"></div>
 
             <div>
                 <label for="batchApiItems">请求体(json格式):</label>
