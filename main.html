@@ -378,10 +378,10 @@
         }
 
         /* 设置模态框内容区域固定高度，不需要滚动 */
-        #settingsModal .modal-content {
-            max-height: none;
-            overflow: visible;
-        }
+        /*#settingsModal .modal-content {*/
+        /*    max-height: none;*/
+        /*    overflow: visible;*/
+        /*}*/
 
         .api-list-btn {
             background-color: var(--primary-color);
@@ -723,11 +723,21 @@
         <h2>脚本设置</h2>
         <form id="settingsForm" class="modal-form">
             <input type="hidden" id="scriptId">
+            
             <label for="modalScriptName">脚本名称:</label>
             <input type="text" id="modalScriptName" required>
+            
+            <label for="modalExecuteMode">执行方式:</label>
+            <select id="modalExecuteMode" required>
+                <option value="specified">按指定时间执行</option>
+                <option value="cycle">按日期循环执行</option>
+            </select>
 
             <label for="modalExecuteTime">执行时间:</label>
-            <input type="text" id="modalExecuteTime">
+            <input type="datetime-local" id="modalExecuteTime" step="1">
+            
+            <label for="modalSendEmail">发送邮箱:</label>
+            <input type="email" id="modalSendEmail" placeholder="请输入邮箱地址">
 
             <label for="modalNeedApi">过滤请求前缀:</label>
             <input type="text" id="modalNeedApi">
@@ -901,9 +911,19 @@
                             )
                             : '#666'
                     }">${script.last_exec_status || '暂无'}</span>
-                    <span style="color: #666;">执行时间间隔(分钟):</span>
+                    <span style="color: #666;">执行方式:</span>
+                    <span>${
+                        script.execute_mode 
+                            ? (script.execute_mode === 'specified' 
+                                ? '按指定时间执行' 
+                                : script.execute_mode === 'cycle' 
+                                    ? '按日期循环执行' 
+                                    : '暂无')
+                            : '暂无'
+                    }</span>
+                    <span style="color: #666;">执行时间:</span>
                     <span>${script.execute_time || '暂无'}</span>
-                    <span style="color: #666;">请求URL匹配:</span>
+                    <span style="color: #666;">指定URL:</span>
                     <span>${script.need_api || '暂无'}</span>
                     <span style="color: #666; height: 31px; line-height: 31px; margin: 8px 0;">需要的API集合:</span>
                     <div class="api-tags">
@@ -942,7 +962,7 @@
                     <button class="log-btn" onclick="showLogs('${script.script_name}')">执行日志</button>
                     <button class="api-list-btn" onclick="showApiList('${script.script_name}')">接口列表</button>
                     <button class="api-btn" onclick="openApiDocs('${script.script_name}')">Swagger</button>
-                                       <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}','${script.delete_apis || ''}')">设置</button>
+                                       <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}','${script.delete_apis || ''}', '${script.send_email || ''}', '${script.execute_mode || 'specified'}')">设置</button>
                 </div>
             `;
             scriptDataDiv.appendChild(scriptElement);
@@ -1030,14 +1050,16 @@
     }
 
     // 打开设置模态框
-    function openSettings(id, scriptName, executeTime, needApi, filteredApis, deleteApis) {
+    function openSettings(id, scriptName, executeTime, needApi, filteredApis, deleteApis, sendEmail, executeMode) {
         const modal = document.getElementById('settingsModal');
         document.getElementById('scriptId').value = id;
         document.getElementById('modalScriptName').value = scriptName;
-        document.getElementById('modalExecuteTime').value = executeTime;
+        document.getElementById('modalExecuteTime').value = executeTime ? formatDateTimeForInput(executeTime) : '';
         document.getElementById('modalNeedApi').value = needApi;
         document.getElementById('modalFilteredApis').value = filteredApis;
         document.getElementById('modalDeleteApis').value = deleteApis;
+        document.getElementById('modalSendEmail').value = sendEmail || '';
+        document.getElementById('modalExecuteMode').value = executeMode || 'specified';
         modal.style.display = 'flex';
     }
 
@@ -1051,6 +1073,19 @@
         document.getElementById('logModal').style.display = 'none';
     }
 
+
+            // 添加日期格式化函数用于datetime-local输入框
+    function formatDateTimeForInput(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    }
     // 点击模态框外部关闭
     window.onclick = function(event) {
         const logModal = document.getElementById('logModal');
@@ -1063,19 +1098,21 @@
         }
     }
 
-    // 处理设置表单提交
+    // 修改表单提交处理
     document.getElementById('settingsForm').onsubmit = async function(e) {
         e.preventDefault();
-        const scriptId = document.getElementById('scriptId').value;
         const data = {
             script_name: document.getElementById('modalScriptName').value,
             execute_time: document.getElementById('modalExecuteTime').value,
             need_api: document.getElementById('modalNeedApi').value,
             filtered_apis: document.getElementById('modalFilteredApis').value,
-            delete_apis: document.getElementById('modalDeleteApis').value
+            delete_apis: document.getElementById('modalDeleteApis').value,
+            send_email: document.getElementById('modalSendEmail').value,
+            execute_mode: document.getElementById('modalExecuteMode').value
         };
 
         try {
+            const scriptId = document.getElementById('scriptId').value;
             const response = await fetch(`http://127.0.0.1:8000/api/updateScript/${scriptId}`, {
                 method: 'POST',
                 headers: {
@@ -1090,7 +1127,7 @@
 
             alert('更新成功！');
             document.getElementById('settingsModal').style.display = 'none';
-            loadScripts(true); // 刷新列表
+            loadScripts(true);
         } catch (error) {
             console.error('更新脚本设置失败:', error);
             alert('更新失败，请检查控制台。');
