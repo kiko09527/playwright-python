@@ -23,6 +23,8 @@ http://127.0.0.1:8000/codegen?url=https://sso-uat.gaojihealth.cn/login/#/
 
 登录账号是 13581791523  登录密码是 Xifan@1007
 
+{"username": "zhaojunf", "password": "999"}
+
 生成测试报告
 pytest --trace test_example.py
 
@@ -33,48 +35,8 @@ playwright show-trace trace.zip
 联合启动方式
 uvicorn start:app --reload
 
+自动抓取：
+python webui.py
 
-CREATE TABLE `log_http` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `script_name` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
-  `unique_code` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
-  `url` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
-  `headers` longtext CHARACTER SET utf8mb4,
-  `post_data` longtext CHARACTER SET utf8mb4,
-  `method` text CHARACTER SET utf8mb4,
-  `status` int(11) DEFAULT NULL,
-  `body` longtext CHARACTER SET utf8mb4,
-  `response_header` longtext CHARACTER SET utf8mb4,
-  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
-  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_nq` (`script_name`,`create_time`) USING BTREE,
-  KEY `idx_nq2` (`unique_code`,`script_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=237 DEFAULT CHARSET=latin1;
-
-
-CREATE TABLE `script_execute_log` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `script_name` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
-  `post_data` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
-  `mode` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
-  `status` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
-  `msg` text CHARACTER SET utf8mb4,
-  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
-  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=latin1;
-
-
-CREATE TABLE `script_info` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `script_name` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
-  `execute_time` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
-  `need_api` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
-  `filtered_apis` text CHARACTER SET utf8mb4,
-  `delete_apis` text CHARACTER SET utf8mb4,
-  `last_exec_status` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
-  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
-  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
+agent启动命令
+khoj --anonymous-mode

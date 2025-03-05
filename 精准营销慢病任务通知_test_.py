@@ -40,9 +40,15 @@ def run(playwright: Playwright) -> None:
         page1.get_by_role("textbox", name="* 任务名称:").fill("RPA创建精准营销")
         page1.get_by_text("请选择分组").click()
         page1.get_by_role("option", name="默认分组").click()
-        page1.get_by_role("button", name="图标: plus 选择人群").click()
-        page1.get_by_role("row", name="会员等级测试项目1人群包").get_by_label("").check()
-        page1.get_by_role("button", name="确定").click()
+        page1.get_by_role('button', name='图标: plus 选择人群').click()
+        page1.get_by_role('cell', name='高济精准营销任务1人群包').click()
+        page1.get_by_role('textbox', name='输入人群名称').click()
+        page1.get_by_role('textbox', name='输入人群名称').fill('高济精准营销任务1')
+        page1.get_by_role('button', name='搜索').click()
+        page1.get_by_role('cell', name='高济精准营销任务1人群包').click()
+        page1.get_by_role('button', name='确定').click()
+        page1.get_by_label('', exact=True).check()
+        page1.get_by_role('button', name='确定').click()
         page1.get_by_text("请选择任务类型").click()
         page1.get_by_role("option", name="慢病随访").click()
         page1.get_by_role("spinbutton", name="* 统计天数 图标: question-circle :").click()
@@ -76,7 +82,7 @@ def run(playwright: Playwright) -> None:
         # 等待一段时间以确保请求完成
         page1.wait_for_timeout(5000)
     finally:
-        context.tracing.stop(path='精准营销创建.zip')
+        context.tracing.stop(path='精准营销慢病任务通知_test_.zip')
         context.close()
         browser.close()
 

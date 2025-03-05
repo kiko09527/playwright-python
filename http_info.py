@@ -67,15 +67,6 @@ def log_response(response, delete_apis=None,filtered_apis=None, need_api=None, c
 
         if filtered_apis and any(api in response.url for api in filtered_apis):
             return  # 直接返回，不记录任何内容
-        # 如果 request.url 包含 filtered_apis 中的任何一项，则记录请求
-        # 记录请求
-        # 记录请求数据
-        query_data = {
-            "script_name": current_file_name,
-            "url": response.url
-        }
-        query_data_result = queryHttpSettingInfo4Server(query_data)
-
 
         response_data = {
             "script_name": current_file_name,

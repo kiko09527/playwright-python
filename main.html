@@ -1094,7 +1094,7 @@
         <div class="tab-buttons">
             <button class="tab-button active" onclick="switchTab(0)">Sloth(手动版)</button>
             <button class="tab-button" onclick="switchTab(1)">Sloth(AI版)</button>
-            <button class="tab-button" onclick="switchTab(2)">Sloth(待定)</button>
+            <button class="tab-button" onclick="switchTab(2)">Sloth(智能体)</button>
         </div>
 
         <!-- Tab 1 内容 -->
@@ -1159,7 +1159,11 @@
 
         <!-- Tab 3 内容 -->
         <div class="tab-content">
-            <p>正在规划中...</p>
+            <iframe
+                    id="aiAssistantFrame2"
+                    src="http://localhost:42110/"
+                    style="width: 100%; height: 800px; border: none; border-radius: 8px;"
+            ></iframe>
         </div>
     </div>
 </div>
