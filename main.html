@@ -1466,7 +1466,9 @@
                     <button class="log-btn" onclick="showLogs('${script.script_name}')">执行日志</button>
                     <button class="api-list-btn" onclick="showApiList('${script.script_name}')">接口列表</button>
                     <button class="api-btn" onclick="openApiDocs('${script.script_name}')">Swagger</button>
+                    <button class="settings-btn" onclick="confirmDelete('${script.id}', '${script.script_name}')" style="background-color: #6c757d;">删除</button>
                     <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}','${script.delete_apis || ''}', '${script.send_email || ''}', '${script.execute_mode || 'specified'}')">设置</button>
+
                 </div>
             `;
             scriptDataDiv.appendChild(scriptElement);
@@ -2332,6 +2334,38 @@
             alert('更新失败，请检查控制台。');
         }
     };
+
+    // 添加删除确认函数
+    function confirmDelete(scriptId, scriptName) {
+        if (confirm(`确定要删除脚本 "${scriptName}" 吗？此操作不可恢复。`)) {
+            deleteScript(scriptId);
+        }
+    }
+
+    // 添加删除脚本函数
+    async function deleteScript(scriptId) {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/api/deleteScript/${scriptId}`, {
+                method: 'DELETE',
+                headers: {
+                    'accept': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert(result.message);
+                // 删除成功后刷新脚本列表
+                loadScripts(true);
+            } else {
+                throw new Error(result.message || '删除失败');
+            }
+        } catch (error) {
+            console.error('删除脚本失败:', error);
+            alert('删除脚本失败：' + error.message);
+        }
+    }
 </script>
 </body>
 </html>

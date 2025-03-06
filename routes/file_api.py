@@ -459,7 +459,33 @@ async def update_script(
         if connection:
             connection.close()
 
+@app.delete("/deleteScript/{script_id}", response_model=dict, summary="删除脚本信息")
+async def delete_script(
+        script_id: int = Path(..., title="脚本 ID", description="需要删除的脚本的 ID")
+):
+    try:
+        # 连接到数据库
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
 
+        # SQL 删除语句
+        query = "DELETE FROM script_info WHERE id = %s"
+        cursor.execute(query, (script_id,))
+        connection.commit()
+
+        # 检查删除的行数
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="脚本未找到")
+
+        return {"message": "脚本删除成功"}
+
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 @app.get("/queryLogHttpList", response_model=dict, summary="查询 HTTP 接口列表")
 async def query_log_http_list(
         page: int = Query(1, ge=1),
