@@ -14,7 +14,7 @@ import mysql.connector
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 import httpx  # 用于发送 HTTP 请求
-
+from config.db_config import db_config
 app = FastAPI()
 
 app.add_middleware(
@@ -30,13 +30,6 @@ UPLOAD_FOLDER = os.getcwd()  # 根目录
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# 数据库连接配置
-db_config = {
-    'host': '127.0.0.1',  # 数据库主机
-    'user': 'root',  # 数据库用户名
-    'password': 'password',  # 数据库密码
-    'database': 'autotest'  # 数据库名称
-}
 
 
 def create_response(success: bool, message: str, output=None):

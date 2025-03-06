@@ -1,6 +1,7 @@
 import logging
 import json
 import mysql.connector
+from config.db_config import db_config
 import time
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -8,12 +9,6 @@ logger = logging.getLogger(__name__)
 responses = []
 
 # 数据库连接配置
-db_config = {
-    'host': '127.0.0.1',  # 数据库主机
-    'user': 'root',  # 数据库用户名
-    'password': 'password',  # 数据库密码
-    'database': 'autotest'  # 数据库名称
-}
 
 
 def query_script_info(script_name):

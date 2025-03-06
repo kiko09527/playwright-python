@@ -1,5 +1,6 @@
 import logging
 import json
+from config.db_config import db_config
 import mysql.connector
 import time
 
@@ -7,15 +8,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 responses = []
 
-# 数据库连接配置
-db_config = {
-    'host': '127.0.0.1',  # 数据库主机
-    'user': 'root',  # 数据库用户名
-    'password': 'password',  # 数据库密码
-    'database': 'autotest'  # 数据库名称
-}
-
-
+#
 # 记录请求
 # def log_request(request, filtered_apis=None, need_api=None, current_file_name=None, unique_code=None):
 #     logger.info(f"log_request|请求参数 url:{request.url}")
