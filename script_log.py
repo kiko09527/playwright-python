@@ -149,9 +149,6 @@ def update_script_execute_log(script_id, new_status, new_msg, script_name):
         # 提交更新操作
         connection.commit()
 
-        if cursor.rowcount == 0:
-            logger.warning(f"update_script_execute_log|未找到 ID 为 {script_id} 的记录。")
-
     except Exception as e:
         logger.error(f"update_script_execute_log|数据库操作异常: {e}")
     finally:
