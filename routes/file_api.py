@@ -57,10 +57,17 @@ def trace(test_file_name: str = 'test_example.py'):
 
     # 构建 pytest 命令
     command = ['pytest', '--trace', test_file_name]
+    
+    # Windows系统需要特殊处理
+    if sys.platform == 'win32':
+        command = ' '.join(command)
+        shell = True
+    else:
+        shell = False
 
     # 执行 pytest 命令
     try:
-        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        result = subprocess.run(command, capture_output=True, text=True, check=True, shell=shell)
         return JSONResponse(content={
             'status': 'success',
             'output': result.stdout
@@ -81,7 +88,16 @@ def codegen(url: str):
     try:
         # 调用 playwright codegen 命令
         command = ["playwright", "codegen", url]
-        process = subprocess.run(command, capture_output=True, text=True)
+        
+        # Windows系统需要特殊处理
+        if sys.platform == 'win32':
+            command = ' '.join(command)
+            shell = True
+        else:
+            shell = False
+            
+        # 执行命令
+        process = subprocess.run(command, capture_output=True, text=True, shell=shell)
 
         # 检查命令是否成功执行
         if process.returncode != 0:
@@ -92,7 +108,7 @@ def codegen(url: str):
 
     except Exception as e:
         logger.error(f"codegen|服务异常{e}")
-        return create_response(False, f"Script execution failed: {e.stderr.strip()}", None)
+        return create_response(False, f"Script execution failed: {str(e)}", None)
 
 
 @app.get("/execute", summary="执行一次脚本")
@@ -149,8 +165,18 @@ def show_trace(trace: str):
         return create_response(False, "Trace file does not exist in the current directory.", None)  # 返回404错误
 
     try:
-        # 使用 subprocess 运行 Playwright show-trace 命令
-        result = subprocess.run(['playwright', 'show-trace', trace_path], capture_output=True, text=True, check=True)
+        # 构建命令
+        command = ['playwright', 'show-trace', trace_path]
+        
+        # Windows系统需要特殊处理
+        if sys.platform == 'win32':
+            command = ' '.join(command)
+            shell = True
+        else:
+            shell = False
+            
+        # 执行 Playwright show-trace 命令
+        result = subprocess.run(command, capture_output=True, text=True, check=True, shell=shell)
         output = result.stdout.strip()
         return create_response(True, "Trace displayed successfully.", output)  # 返回成功响应
     except Exception as e:
@@ -180,7 +206,19 @@ def run_pytest(trace: str):
         # 设置 PWDEBUG 环境变量，并运行 pytest
         env = os.environ.copy()  # 复制当前环境变量
         env["PWDEBUG"] = "1"  # 设置 PWDEBUG 环境变量
-        result = subprocess.run(['pytest', '-s', trace_path], capture_output=True, text=True, env=env, check=True)
+        
+        # 构建命令
+        command = ['pytest', '-s', trace_path]
+        
+        # Windows系统需要特殊处理
+        if sys.platform == 'win32':
+            command = ' '.join(command)
+            shell = True
+        else:
+            shell = False
+            
+        # 执行命令
+        result = subprocess.run(command, capture_output=True, text=True, env=env, check=True, shell=shell)
         output = result.stdout.strip()
         return create_response(True, "Pytest executed successfully.", output)  # 返回成功响应
     except Exception as e:
@@ -193,7 +231,7 @@ def upload_code(filename: str = Form(...), code: str = Form(...), fileType: str 
     logger.info(f"upload_code|请求参数 filename:{filename},code:{code},fileType:{fileType}")
     # 根据 fileType 修改文件名逻辑
     if not filename.endswith('.py'):
-        filename += '.py'  # 自动添加 .py 扩展名
+        filename += '.py'  # 自动添加 '.py' 后缀
 
     if not code:
         raise HTTPException(status_code=400, detail="No code provided.")
@@ -212,8 +250,8 @@ def upload_code(filename: str = Form(...), code: str = Form(...), fileType: str 
         logger.warning(f"upload_code|代码补充")
         modified_code = code  # 如果fileType是1,则直接使用code
 
-    # 生成完整文件路径
-    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    # 生成完整文件路径，使用normpath确保跨平台兼容性
+    file_path = os.path.normpath(os.path.join(UPLOAD_FOLDER, filename))
 
     try:
         # 将代码写入指定的 .py 文件
