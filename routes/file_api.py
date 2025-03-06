@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import sys
 from fastapi import FastAPI, HTTPException, Query, Path, Request, Form
 from fastapi.responses import JSONResponse
 import subprocess
@@ -15,6 +15,7 @@ from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 import httpx  # 用于发送 HTTP 请求
 from config.db_config import db_config
+
 app = FastAPI()
 
 app.add_middleware(
@@ -105,7 +106,9 @@ def execute_script(name: str):
     if not name.endswith('.py'):
         name += '.py'  # 自动添加 '.py' 后缀
 
-    script_path = os.path.join(current_directory, name)
+    # 使用os.path.normpath来规范化路径，处理不同操作系统的路径分隔符
+    script_path = os.path.normpath(os.path.join(current_directory, name))
+    
     # 检查文件是否存在
     if not os.path.isfile(script_path):
         logger.error(f"execute_script|文件不存在log_id:{log_id}")
@@ -113,8 +116,10 @@ def execute_script(name: str):
         return create_response(False, "Script does not exist in the current directory.", None)  # 返回404错误
 
     try:
+        # 使用sys.executable确保使用正确的Python解释器路径
+        python_executable = sys.executable
         # 使用subprocess运行外部python脚本
-        result = subprocess.run(['python', script_path], capture_output=True, text=True, check=True)
+        result = subprocess.run([python_executable, script_path], capture_output=True, text=True, check=True)
         output = result.stdout.strip()
         update_script_execute_log(log_id, "执行成功", "Script executed successfully.", name)
         logger.error(f"execute_script|执行成功{output}")
