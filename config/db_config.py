@@ -6,7 +6,7 @@ db_config = {
 }
 
 db_config_local = {
-    'host': '127.0.0.1',  # 数据库主机
+    'host': '127.0.0.1',  # 数据库主机1
     'user': 'root',  # 数据库用户名
     'password': 'password',  # 数据库密码
     'database': 'autotest'  # 数据库名称
