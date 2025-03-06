@@ -212,7 +212,7 @@ def upload_code(filename: str = Form(...), code: str = Form(...), fileType: str 
 
     try:
         # 将代码写入指定的 .py 文件
-        with open(file_path, 'w') as file:
+        with open(file_path, 'w', encoding='utf-8') as file:
             file.write(modified_code)
         insert_script_info(filename, "暂未执行")
         return JSONResponse(content={"message": "Python script created successfully!", "filename": filename})
