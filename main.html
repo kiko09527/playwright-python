@@ -1455,9 +1455,21 @@
                     </div>
                 </div>
                 <div class="action-buttons">
-                    <button class="execute-btn" onclick="executeScript('${script.script_name}')">执行</button>
-                    <button class="debug-btn" onclick="debugScript('${script.script_name}')">调试</button>
-                    <button class="report-btn" onclick="showReport('${script.script_name}')">Trace跟踪</button>
+                    <button class="execute-btn" 
+                        onclick="executeScript('${script.script_name}')"
+                        ${script.script_name.endsWith('_api_test_') ? 'disabled style="background-color: #ccc; cursor: not-allowed;"' : ''}>
+                        执行
+                    </button>
+                    <button class="debug-btn" 
+                        onclick="debugScript('${script.script_name}')"
+                        ${script.script_name.endsWith('_api_test_') ? 'disabled style="background-color: #ccc; cursor: not-allowed;"' : ''}>
+                        调试
+                    </button>
+                    <button class="report-btn" 
+                        onclick="showReport('${script.script_name}')"
+                        ${script.script_name.endsWith('_api_test_') ? 'disabled style="background-color: #ccc; cursor: not-allowed;"' : ''}>
+                        Trace跟踪
+                    </button>
                     <button class="api-btn"
                         onclick="openBatchApi('${script.script_name}')"
                         ${script.script_name.endsWith('_api_test_') ? '' : 'disabled style="background-color: #ccc; cursor: not-allowed;"'}>
