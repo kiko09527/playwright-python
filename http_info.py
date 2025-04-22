@@ -85,7 +85,7 @@ def log_response(response, delete_apis=None,filtered_apis=None, need_api=None, c
             "response_header": response.headers,
             "response_time": response_time
         }
-        logger.info(f"log_response 记录响应结果|url:{response.url}已记录响应{timing_info}")
+        logger.info(f"log_response 记录响应结果|url:{response.url}已记录响应{response_time}")
         # 将响应数据保存到数据库
         save_to_database(response_data, current_file_name, unique_code)
     except Exception as e:
