@@ -61,6 +61,16 @@ def log_response(response, delete_apis=None,filtered_apis=None, need_api=None, c
         if filtered_apis and any(api in response.url for api in filtered_apis):
             return  # 直接返回，不记录任何内容
 
+        timing_info = response.request.timing
+        response_time = None
+
+
+
+        if timing_info:
+            # 计算从请求开始到响应结束的总时间（毫秒）
+            # timing.responseEnd - timing.requestStart 是一个更准确的响应时间度量
+            response_time = timing_info.get("responseStart", 0) - timing_info.get("requestStart", 0)
+
         response_data = {
             "script_name": current_file_name,
             "unique_code": unique_code,
@@ -72,9 +82,10 @@ def log_response(response, delete_apis=None,filtered_apis=None, need_api=None, c
             "url": response.url,
             "status": response.status,
             "body": response.body().decode('utf-8'),
-            "response_header": response.headers
+            "response_header": response.headers,
+            "response_time": response_time
         }
-        logger.info(f"log_response 记录响应结果|url:{response.url}已记录响应")
+        logger.info(f"log_response 记录响应结果|url:{response.url}已记录响应{timing_info}")
         # 将响应数据保存到数据库
         save_to_database(response_data, current_file_name, unique_code)
     except Exception as e:
@@ -119,8 +130,8 @@ def save_to_database(data, current_file_name, unique_code):
         # 提交删除操作
         connection.commit()
         insert_query = """
-            INSERT INTO log_http (script_name, unique_code, url, headers, post_data, method, status, body,response_header)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s,%s)
+            INSERT INTO log_http (script_name, unique_code, url, headers, post_data, method, status, body,response_header,response_time)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s,%s,%s)
         """
         # 批量插入
         # 插入单个数据对象
@@ -133,7 +144,8 @@ def save_to_database(data, current_file_name, unique_code):
             data['method'],
             data['status'],
             data['body'],
-            json.dumps(data['response_header'])
+            json.dumps(data['response_header']),
+            data['response_time'],
         ))
         connection.commit()
     except Exception as e:
