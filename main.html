@@ -1191,15 +1191,20 @@
 
             <div class="form-group">
                 <label for="modalExecuteMode">执行方式</label>
-                <select id="modalExecuteMode" class="form-select" required>
+                <select id="modalExecuteMode" class="form-select" required onchange="toggleExecuteTimeInput()">
                     <option value="specified">按指定时间执行</option>
-                    <option value="cycle">按日期循环执行</option>
+                    <option value="cycle">按周期循环执行</option>
                 </select>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="specifiedTimeGroup">
                 <label for="modalExecuteTime">执行时间</label>
                 <input type="datetime-local" id="modalExecuteTime" class="form-input form-input-short" step="1">
+            </div>
+
+            <div class="form-group" id="cycleTimeGroup" style="display: none;">
+                <label for="modalCycleTime">执行周期(分钟)</label>
+                <input type="number" id="modalCycleTime" class="form-input form-input-short" min="1" placeholder="请输入执行周期">
             </div>
 
             <div class="form-group">
@@ -1415,14 +1420,18 @@
                                     ? (script.execute_mode === 'specified'
                                         ? '按指定时间执行'
                                         : script.execute_mode === 'cycle'
-                                            ? '按日期循环执行'
+                                            ? '按周期循环执行'
                                             : '暂无')
                                     : '暂无'
                             }</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">执行时间:</span>
-                            <span class="info-value">${formatDateTime(script.execute_time) || '暂无'}</span>
+                            <span class="info-value">${
+                                script.execute_mode === 'cycle'
+                                    ? (script.execute_time ? `${script.execute_time}分钟` : '暂无')
+                                    : (formatDateTime(script.execute_time) || '暂无')
+                            }</span>
                         </div>
 
                         <div class="info-item full-width">
@@ -1578,12 +1587,23 @@
         const modal = document.getElementById('settingsModal');
         document.getElementById('scriptId').value = id;
         document.getElementById('modalScriptName').value = scriptName;
-        document.getElementById('modalExecuteTime').value = executeTime ? formatDateTimeForInput(executeTime) : '';
         document.getElementById('modalNeedApi').value = needApi;
         document.getElementById('modalFilteredApis').value = filteredApis;
         document.getElementById('modalDeleteApis').value = deleteApis;
         document.getElementById('modalSendEmail').value = sendEmail || '';
         document.getElementById('modalExecuteMode').value = executeMode || 'specified';
+        
+        // 根据执行方式设置时间输入框
+        if (executeMode === 'cycle') {
+            document.getElementById('modalCycleTime').value = executeTime || '';
+            document.getElementById('specifiedTimeGroup').style.display = 'none';
+            document.getElementById('cycleTimeGroup').style.display = 'block';
+        } else {
+            document.getElementById('modalExecuteTime').value = executeTime ? formatDateTimeForInput(executeTime) : '';
+            document.getElementById('specifiedTimeGroup').style.display = 'block';
+            document.getElementById('cycleTimeGroup').style.display = 'none';
+        }
+        
         modal.style.display = 'flex';
     }
 
@@ -1625,15 +1645,22 @@
     // 修改表单提交处理
     document.getElementById('settingsForm').onsubmit = async function(e) {
         e.preventDefault();
+        const executeMode = document.getElementById('modalExecuteMode').value;
         const data = {
             script_name: document.getElementById('modalScriptName').value,
-            execute_time: document.getElementById('modalExecuteTime').value,
             need_api: document.getElementById('modalNeedApi').value,
             filtered_apis: document.getElementById('modalFilteredApis').value,
             delete_apis: document.getElementById('modalDeleteApis').value,
             send_email: document.getElementById('modalSendEmail').value,
-            execute_mode: document.getElementById('modalExecuteMode').value
+            execute_mode: executeMode
         };
+
+        // 根据执行方式设置不同的时间字段
+        if (executeMode === 'specified') {
+            data.execute_time = document.getElementById('modalExecuteTime').value;
+        } else {
+            data.execute_time = document.getElementById('modalCycleTime').value;
+        }
 
         try {
             const scriptId = document.getElementById('scriptId').value;
@@ -2381,6 +2408,21 @@
         } catch (error) {
             console.error('删除脚本失败:', error);
             alert('删除脚本失败：' + error.message);
+        }
+    }
+
+    // 添加切换执行时间输入框的函数
+    function toggleExecuteTimeInput() {
+        const executeMode = document.getElementById('modalExecuteMode').value;
+        const specifiedTimeGroup = document.getElementById('specifiedTimeGroup');
+        const cycleTimeGroup = document.getElementById('cycleTimeGroup');
+        
+        if (executeMode === 'specified') {
+            specifiedTimeGroup.style.display = 'block';
+            cycleTimeGroup.style.display = 'none';
+        } else {
+            specifiedTimeGroup.style.display = 'none';
+            cycleTimeGroup.style.display = 'block';
         }
     }
 </script>

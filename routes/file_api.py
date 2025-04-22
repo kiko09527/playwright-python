@@ -386,6 +386,7 @@ async def query_script_log_list(
 # 更新请求模型
 class ScriptUpdate(BaseModel):
     execute_mode: Optional[str] = None
+    execute_cycle_time:Optional[str] = None
     send_email: Optional[str] = None
     script_name: Optional[str] = None
     execute_time: Optional[str] = None
@@ -414,6 +415,10 @@ async def update_script(
         if update_data.execute_mode is not None:
             updates.append("execute_mode = %s")
             params.append(update_data.execute_mode)
+
+        if update_data.execute_mode is not None:
+            updates.append("execute_cycle_time = %s")
+            params.append(update_data.execute_cycle_time)
 
         if update_data.send_email is not None:
             updates.append("send_email = %s")

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.jzyx_api import app as jzyx_api_app
 from routes.multi_routes import app as multi_routes_app
 from routes.file_api import app as file_api_app
+from routes.taskTimeExecutor import start_task_executor
 
 app = FastAPI()
 # 添加 CORS 中间件
@@ -23,6 +24,9 @@ app.add_middleware(
 app.mount("/jzyx", jzyx_api_app)
 app.mount("/test", multi_routes_app)
 app.mount("/api/", file_api_app)
+
+# 启动定时任务执行器
+start_task_executor()
 
 if __name__ == "__main__":
     import uvicorn
