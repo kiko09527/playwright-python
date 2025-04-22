@@ -93,7 +93,7 @@ def start_task_executor():
     """启动任务执行器"""
     task_executor.start()
     # 每分钟检查一次任务
-    schedule.every(1).minutes.do(task_executor.check_and_execute_tasks)
+    schedule.every(5).minutes.do(task_executor.check_and_execute_tasks)
     print("定时任务执行器已启动")
 
 if __name__ == "__main__":
