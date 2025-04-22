@@ -679,6 +679,11 @@
             font-size: 14px;
             flex: 1;
         }
+        .info-valueV1 {
+            font-size: 16px;
+            font-weight: bold;
+            flex: 1;
+        }
 
         .api-tags {
             display: flex;
@@ -1388,7 +1393,7 @@
                     <div class="info-grid">
                         <div class="info-item">
                             <span class="info-label">最近一次执行状态:</span>
-                            <span class="info-value" style="color: ${
+                            <span class="info-valueV1" style="color: ${
                                 script.last_exec_status
                                     ? (script.last_exec_status.includes('失败') || script.last_exec_status.includes('异常')
                                         ? '#dc3545'  // 红色
@@ -1477,7 +1482,7 @@
                     </button>
                     <button class="log-btn" onclick="showLogs('${script.script_name}')">执行日志</button>
                     <button class="api-list-btn" onclick="showApiList('${script.script_name}')">接口列表</button>
-                    <button class="api-btn" onclick="openApiDocs('${script.script_name}')">Swagger</button>
+                    <!-- <button class="api-btn" onclick="openApiDocs('${script.script_name}')">Swagger</button> -->
                     <button class="settings-btn" onclick="confirmDelete('${script.id}', '${script.script_name}')" style="background-color: #6c757d;">删除</button>
                     <button class="settings-btn" onclick="openSettings('${script.id}', '${script.script_name}', '${script.execute_time || ''}', '${script.need_api || ''}', '${script.filtered_apis || ''}','${script.delete_apis || ''}', '${script.send_email || ''}', '${script.execute_mode || 'specified'}')">设置</button>
 
