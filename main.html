@@ -1953,6 +1953,14 @@
                     <span>${api.post_data ? api.post_data : '暂无'}</span>
                 </div>
                 <div class="api-detail-row">
+                    <span>接口响应:</span>
+                    <span style="color: ${
+                        api.response_time > 500 ? '#e90e0e' :
+                        api.response_time > 300 ? '#ad686f' :
+                        '#28a745'
+                    }; font-weight: bold;">${api.response_time}ms</span>
+                </div>
+                <div class="api-detail-row">
                     <span>请求头:</span>
                     <div class="button-group" style="justify-content: center;">
                         <button class="copy-btn" onclick="copyContent('${encodeURIComponent(api.headers)}', this)" style="justify-content: center;">复制</button>
