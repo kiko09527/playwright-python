@@ -466,9 +466,11 @@ async def update_script(
 
 @app.delete("/deleteScript/{script_id}", response_model=dict, summary="删除脚本信息")
 async def delete_script(
-        script_id: int = Path(..., title="脚本 ID", description="需要删除的脚本的 ID")
+        script_id: int = Path(..., title="脚本 ID", description="需要删除的脚本的 ID"),
+        script_name: Optional[str] = Query(None, title="脚本名称", description="脚本名称，用于同时删除脚本文件")
 ):
     try:
+        logger.info(f"deleteScript|请求参数: script_id={script_id}, script_name={script_name}")
         # 连接到数据库
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
@@ -481,16 +483,37 @@ async def delete_script(
         # 检查删除的行数
         if cursor.rowcount == 0:
             raise HTTPException(status_code=404, detail="脚本未找到")
+        
+        # 如果提供了脚本名称，同时删除脚本文件
+        if script_name:
+            # 确保脚本名是以 '.py' 结尾
+            if not script_name.endswith('.py'):
+                script_name += '.py'  # 自动添加 '.py' 后缀
+                
+            # 获取当前工作目录
+            current_directory = os.getcwd()
+            script_path = os.path.normpath(os.path.join(current_directory, script_name))
+            
+            # 检查文件是否存在并删除
+            if os.path.isfile(script_path):
+                os.remove(script_path)
+                logger.info(f"delete_script|已删除脚本文件: {script_path}")
+            else:
+                logger.warning(f"delete_script|脚本文件不存在: {script_path}")
 
         return {"message": "脚本删除成功"}
 
     except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        logger.error(f"delete_script|删除脚本异常: {e}")
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if cursor:
             cursor.close()
         if connection:
             connection.close()
+
 @app.get("/queryLogHttpList", response_model=dict, summary="查询 HTTP 接口列表")
 async def query_log_http_list(
         page: int = Query(1, ge=1),

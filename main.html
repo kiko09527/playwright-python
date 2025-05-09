@@ -2390,14 +2390,14 @@
     // 添加删除确认函数
     function confirmDelete(scriptId, scriptName) {
         if (confirm(`确定要删除脚本 "${scriptName}" 吗？此操作不可恢复。`)) {
-            deleteScript(scriptId);
+            deleteScript(scriptId, scriptName);
         }
     }
 
     // 添加删除脚本函数
-    async function deleteScript(scriptId) {
+    async function deleteScript(scriptId, scriptName) {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/deleteScript/${scriptId}`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/deleteScript/${scriptId}?script_name=${scriptName}`, {
                 method: 'DELETE',
                 headers: {
                     'accept': 'application/json'
