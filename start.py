@@ -8,8 +8,9 @@ from routes.taskTimeExecutor import start_task_executor
 app = FastAPI()
 # 添加 CORS 中间件
 origins = [
-    "http://localhost:63342",  # 允许的前端应用源
-    "http://127.0.0.1:8000",    # 其他服务的源（如果有）
+    "http://localhost:63342",
+    "http://10.8.50.48:63342",# 允许的前端应用源
+    "http://10.8.50.48:8000",    # 其他服务的源（如果有）
 ]
 
 app.add_middleware(
@@ -30,4 +31,4 @@ start_task_executor()
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run(app, host="10.8.50.48", port=8000, reload=True)
