@@ -1365,6 +1365,7 @@
 
     async function fetchScripts(page) {
         try {
+            console.log('正在请求页码:', page); // 添加日志
             const searchParams = new URLSearchParams({
                 page: page,
                 page_size: pageSize
@@ -1373,8 +1374,11 @@
             if (currentScriptName) {
                 searchParams.append('script_name', currentScriptName);
             }
-
-            const response = await fetch(`http://127.0.0.1:8000/api/queryScriptList?${searchParams.toString()}`);
+            
+            const url = `http://127.0.0.1:8000/api/queryScriptList?${searchParams.toString()}`;
+            console.log('请求URL:', url); // 记录完整请求URL
+            
+            const response = await fetch(url);
             if (!response.ok) {
                 throw new Error('网络响应失败');
             }
@@ -1388,7 +1392,7 @@
 
     function renderScripts(data) {
         const scriptDataDiv = document.getElementById('scriptData');
-        scriptDataDiv.innerHTML = '';
+        // 不清空现有内容，而是追加新内容
         data.forEach(script => {
             const scriptElement = document.createElement('div');
             scriptElement.className = 'script-item';
@@ -1500,20 +1504,52 @@
             scriptDataDiv.appendChild(scriptElement);
         });
     }
+
     async function loadScripts(isNewSearch = false) {
         if (isNewSearch) {
             currentPage = 1;
             const scriptDataDiv = document.getElementById('scriptData');
             scriptDataDiv.innerHTML = ''; // 清空现有列表
+            
+            // 重置加载更多按钮状态
+            const loadMoreBtn = document.getElementById('loadMore');
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.style.backgroundColor = ''; // 恢复默认背景色
+            loadMoreBtn.style.cursor = 'pointer';
+            loadMoreBtn.textContent = '加载更多';
         }
-
+        
+        console.log('加载脚本页码:', currentPage); // 添加日志
         const result = await fetchScripts(currentPage);
         if (result) {
-            renderScripts(result.data);
-            currentPage++;
+            // 检查是否有数据
+            if (result.data && result.data.length > 0) {
+                renderScripts(result.data);
+                currentPage++; // 在成功获取数据后递增页码
+                console.log('页码已更新为:', currentPage); // 添加日志
+                
+                // 如果返回的数据量小于页大小，说明已经没有更多数据
+                if (result.data.length < pageSize) {
+                    document.getElementById('loadMore').disabled = true;
+                    document.getElementById('loadMore').style.backgroundColor = '#ccc';
+                    document.getElementById('loadMore').style.cursor = 'not-allowed';
+                    document.getElementById('loadMore').textContent = '没有更多数据';
+                }
+            } else {
+                // 没有数据，禁用按钮
+                document.getElementById('loadMore').disabled = true;
+                document.getElementById('loadMore').style.backgroundColor = '#ccc';
+                document.getElementById('loadMore').style.cursor = 'not-allowed';
+                document.getElementById('loadMore').textContent = '没有更多数据';
+                
+                if (currentPage === 1) {
+                    // 如果是第一页就没有数据，显示提示信息
+                    const scriptDataDiv = document.getElementById('scriptData');
+                    scriptDataDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">没有找到符合条件的脚本</div>';
+                }
+            }
         }
     }
-
 
     // 搜索按钮点击事件
     document.getElementById('searchButton').addEventListener('click', () => {
@@ -1531,11 +1567,14 @@
 
     // 页面加载时自动加载第一页脚本
     window.onload = () => {
-        loadScripts();
+        loadScripts(true); // 使用true参数确保初始化按钮状态
     };
 
     // 加载更多按钮
-    document.getElementById('loadMore').addEventListener('click', loadScripts);
+    document.getElementById('loadMore').addEventListener('click', function() {
+        console.log('点击加载更多，当前页码:', currentPage); // 添加日志
+        loadScripts();
+    });
 
     // 表单提交时
     document.getElementById('uploadForm').addEventListener('submit', async (event) => {

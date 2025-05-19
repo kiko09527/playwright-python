@@ -5,7 +5,7 @@ db_config = {
     'database': 'autotest'  # 数据库名称
 }
 
-db_config_local = {
+db_config_d = {
     'host': '127.0.0.1',  # 数据库主机1
     'user': 'root',  # 数据库用户名
     'password': 'password',  # 数据库密码
