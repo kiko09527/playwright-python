@@ -32,7 +32,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 
-
 def create_response(success: bool, message: str, output=None):
     """生成一致的响应格式"""
     response_data = {
@@ -57,7 +56,7 @@ def trace(test_file_name: str = 'test_example.py'):
 
     # 构建 pytest 命令
     command = ['pytest', '--trace', test_file_name]
-    
+
     # Windows系统需要特殊处理
     if sys.platform == 'win32':
         command = ' '.join(command)
@@ -88,14 +87,14 @@ def codegen(url: str):
     try:
         # 调用 playwright codegen 命令
         command = ["playwright", "codegen", url]
-        
+
         # Windows系统需要特殊处理
         if sys.platform == 'win32':
             command = ' '.join(command)
             shell = True
         else:
             shell = False
-            
+
         # 执行命令
         process = subprocess.run(command, capture_output=True, text=True, shell=shell)
 
@@ -124,7 +123,7 @@ def execute_script(name: str):
 
     # 使用os.path.normpath来规范化路径，处理不同操作系统的路径分隔符
     script_path = os.path.normpath(os.path.join(current_directory, name))
-    
+
     # 检查文件是否存在
     if not os.path.isfile(script_path):
         logger.error(f"execute_script|文件不存在log_id:{log_id}")
@@ -167,14 +166,14 @@ def show_trace(trace: str):
     try:
         # 构建命令
         command = ['playwright', 'show-trace', trace_path]
-        
+
         # Windows系统需要特殊处理
         if sys.platform == 'win32':
             command = ' '.join(command)
             shell = True
         else:
             shell = False
-            
+
         # 执行 Playwright show-trace 命令
         result = subprocess.run(command, capture_output=True, text=True, check=True, shell=shell)
         output = result.stdout.strip()
@@ -206,17 +205,17 @@ def run_pytest(trace: str):
         # 设置 PWDEBUG 环境变量，并运行 pytest
         env = os.environ.copy()  # 复制当前环境变量
         env["PWDEBUG"] = "1"  # 设置 PWDEBUG 环境变量
-        
+
         # 构建命令
         command = ['pytest', '-s', trace_path]
-        
+
         # Windows系统需要特殊处理
         if sys.platform == 'win32':
             command = ' '.join(command)
             shell = True
         else:
             shell = False
-            
+
         # 执行命令
         result = subprocess.run(command, capture_output=True, text=True, env=env, check=True, shell=shell)
         output = result.stdout.strip()
@@ -386,7 +385,7 @@ async def query_script_log_list(
 # 更新请求模型
 class ScriptUpdate(BaseModel):
     execute_mode: Optional[str] = None
-    execute_cycle_time:Optional[str] = None
+    execute_cycle_time: Optional[str] = None
     send_email: Optional[str] = None
     script_name: Optional[str] = None
     execute_time: Optional[str] = None
@@ -407,7 +406,6 @@ async def update_script(
         updates = []
         params = []
 
-
         if update_data.script_name is not None:
             updates.append("script_name = %s")
             params.append(update_data.script_name)
@@ -416,7 +414,7 @@ async def update_script(
             updates.append("execute_mode = %s")
             params.append(update_data.execute_mode)
 
-        if update_data.execute_mode is not None:
+        if update_data.execute_cycle_time is not None:
             updates.append("execute_cycle_time = %s")
             params.append(update_data.execute_cycle_time)
 
@@ -464,6 +462,7 @@ async def update_script(
         if connection:
             connection.close()
 
+
 @app.delete("/deleteScript/{script_id}", response_model=dict, summary="删除脚本信息")
 async def delete_script(
         script_id: int = Path(..., title="脚本 ID", description="需要删除的脚本的 ID"),
@@ -483,17 +482,17 @@ async def delete_script(
         # 检查删除的行数
         if cursor.rowcount == 0:
             raise HTTPException(status_code=404, detail="脚本未找到")
-        
+
         # 如果提供了脚本名称，同时删除脚本文件
         if script_name:
             # 确保脚本名是以 '.py' 结尾
             if not script_name.endswith('.py'):
                 script_name += '.py'  # 自动添加 '.py' 后缀
-                
+
             # 获取当前工作目录
             current_directory = os.getcwd()
             script_path = os.path.normpath(os.path.join(current_directory, script_name))
-            
+
             # 检查文件是否存在并删除
             if os.path.isfile(script_path):
                 os.remove(script_path)
@@ -513,6 +512,7 @@ async def delete_script(
             cursor.close()
         if connection:
             connection.close()
+
 
 @app.get("/queryLogHttpList", response_model=dict, summary="查询 HTTP 接口列表")
 async def query_log_http_list(
@@ -614,13 +614,13 @@ async def batchExecute(request: Request):
                 totalCount = len(data_list)
                 # 将 保存日志
                 log_id = save_script_log(name, json.dumps(data_item), "API", "正在执行..", "脚本正在执行,请耐心等候")  # 保存日志
-                
+
                 # 使用sys.executable确保使用正确的Python解释器路径
                 python_executable = sys.executable
-                
+
                 # 将 data_item 转换为字符串
                 data_json_str = json.dumps(data_item)
-                
+
                 # Windows系统需要特殊处理
                 if sys.platform == 'win32':
                     # 在Windows上，命令行参数中的引号需要特殊处理
@@ -630,9 +630,9 @@ async def batchExecute(request: Request):
                 else:
                     command = [python_executable, script_path, data_json_str]
                     shell = False
-                
+
                 logger.info(f"batchExecute|执行命令: {command}")  # 记录执行的命令
-                
+
                 # 使用subprocess运行外部python脚本
                 result = subprocess.run(command, capture_output=True, text=True, check=True, shell=shell)
                 logger.info(f"batchExecute|命令输出: {result.stdout.strip()}")  # 记录命令输出
@@ -645,7 +645,8 @@ async def batchExecute(request: Request):
                     "data": data_item,
                     "response": output
                 })
-                update_script_execute_log_api(log_id, "执行成功", "Script executed successfully.", name, totalCount,currentCount)
+                update_script_execute_log_api(log_id, "执行成功", "Script executed successfully.", name, totalCount,
+                                              currentCount)
             except subprocess.CalledProcessError as e:
                 logger.error(f"batchExecute|CalledProcessError服务异常: {e.stderr.strip()}")  # 记录标准错误输出
                 update_script_execute_log_api(log_id, "执行失败", e.stderr.strip(), name, totalCount, currentCount)
@@ -849,6 +850,129 @@ def queryHttpSettingInfo(query_data: HttpSettingQuery):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         # 关闭游标和连接
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+# 定义批量执行参数保存请求模型
+class BatchParamsSave(BaseModel):
+    script_name: str
+    params_name: str
+    params_data: str
+
+
+@app.post("/saveBatchParams", summary="保存批量执行参数")
+async def save_batch_params(params_data: BatchParamsSave):
+    connection = None
+    cursor = None
+    try:
+        logger.info(
+            f"save_batch_params|请求参数: script_name:{params_data.script_name}, params_name:{params_data.params_name}")
+
+        # 验证参数
+        if not params_data.script_name or not params_data.params_name or not params_data.params_data:
+            return create_response(False, "脚本名称、参数集名称和参数数据不能为空", None)
+
+        # 验证JSON格式
+        try:
+            json.loads(params_data.params_data)
+        except json.JSONDecodeError:
+            return create_response(False, "参数数据必须是有效的JSON格式", None)
+
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+
+        # 检查是否已存在相同名称的参数集
+        check_query = "SELECT id FROM batch_execute_params WHERE script_name = %s AND params_name = %s"
+        cursor.execute(check_query, (params_data.script_name, params_data.params_name))
+        existing = cursor.fetchone()
+
+        if existing:
+            # 更新现有记录
+            update_query = """
+                UPDATE batch_execute_params 
+                SET params_data = %s, update_time = CURRENT_TIMESTAMP 
+                WHERE script_name = %s AND params_name = %s
+            """
+            cursor.execute(update_query, (params_data.params_data, params_data.script_name, params_data.params_name))
+            message = "参数集更新成功"
+        else:
+            # 插入新记录
+            insert_query = """
+                INSERT INTO batch_execute_params (script_name, params_name, params_data) 
+                VALUES (%s, %s, %s)
+            """
+            cursor.execute(insert_query, (params_data.script_name, params_data.params_name, params_data.params_data))
+            message = "参数集保存成功"
+
+        connection.commit()
+        return create_response(True, message, None)
+
+    except Exception as e:
+        logger.error(f"save_batch_params|服务异常: {e}")
+        return create_response(False, f"保存参数失败: {str(e)}", None)
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+@app.get("/getBatchParams", summary="获取批量执行参数列表")
+async def get_batch_params(script_name: str):
+    connection = None
+    cursor = None
+    try:
+        logger.info(f"get_batch_params|请求参数: script_name:{script_name}")
+
+        if not script_name:
+            return create_response(False, "脚本名称不能为空", None)
+
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+
+        # 打印完整的SQL语句和参数，便于调试
+        query = """
+            SELECT id, script_name, params_name, params_data, 
+                   DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s') as create_time,
+                   DATE_FORMAT(update_time, '%Y-%m-%d %H:%i:%s') as update_time
+            FROM batch_execute_params 
+            WHERE script_name = %s
+            ORDER BY update_time DESC
+        """
+        logger.info(f"get_batch_params|执行SQL: {query}, 参数: {script_name}")
+        
+        # 尝试直接执行不带格式化的查询
+        try:
+            cursor.execute(query, (script_name,))
+        except Exception as sql_error:
+            # 如果出错，尝试使用字符串替换而不是参数化查询（注意：这不是推荐的做法，但可以帮助诊断问题）
+            logger.warning(f"get_batch_params|参数化查询失败，尝试直接替换: {sql_error}")
+            safe_query = f"""
+                SELECT id, script_name, params_name, params_data, 
+                       DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s') as create_time,
+                       DATE_FORMAT(update_time, '%Y-%m-%d %H:%i:%s') as update_time
+                FROM batch_execute_params 
+                WHERE script_name = '{script_name.replace("'", "''")}'
+                ORDER BY update_time DESC
+            """
+            cursor.execute(safe_query)
+        
+        params_list = cursor.fetchall()
+
+        return {
+            "success": True,
+            "message": "获取参数列表成功",
+            "data": params_list
+        }
+
+    except Exception as e:
+        logger.error(f"get_batch_params|服务异常: {e}")
+        logger.error(f"get_batch_params|错误详情: {type(e).__name__}, {str(e)}")
+        return create_response(False, f"获取参数列表失败: {str(e)}", None)
+    finally:
         if cursor:
             cursor.close()
         if connection:

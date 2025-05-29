@@ -1034,27 +1034,22 @@
         }
 
         .execute-batch-btn {
-            width: 100%;
-            background: var(--primary-color);
+            background-color: #007bff;
             color: white;
             border: none;
-            border-radius: 12px;
-            padding: 16px;
+            border-radius: 4px;
+            padding: 10px 20px;
             font-size: 16px;
-            font-weight: 500;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 16px;
+            gap: 10px;
+            flex: 1;
         }
-
+        
         .execute-batch-btn:hover {
-            background: #357abd;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(74,144,226,0.2);
+            background-color: #0069d9;
         }
 
         .form-input-disabled {
@@ -1090,6 +1085,182 @@
                 flex-direction: row;
                 justify-content: flex-end;
             }
+        }
+
+        /* 批量API模态框样式 */
+        .batch-modal {
+            max-width: 800px;
+        }
+        
+        .batch-modal-header {
+            margin-bottom: 20px;
+        }
+        
+        .batch-modal-header .subtitle {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .batch-api-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .batch-items-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .batch-api-item {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .batch-api-input {
+            flex: 1;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        
+        .batch-api-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .add-api-btn, .remove-api-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .add-api-btn {
+            background-color: #28a745;
+        }
+        
+        .remove-api-btn {
+            background-color: #dc3545;
+        }
+        
+        .execute-batch-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .execute-batch-btn:hover {
+            background-color: #0069d9;
+        }
+        
+        /* 新增样式 */
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn-icon {
+            font-size: 18px;
+            margin-right: 5px;
+        }
+        
+        .btn-text {
+            font-weight: 500;
+        }
+        
+        .save-params-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .save-params-btn:hover {
+            background-color: #218838;
+        }
+        
+        .execute-batch-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .execute-batch-btn:hover {
+            background-color: #0069d9;
+        }
+        
+        .params-select-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .params-select {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .refresh-btn {
+            width: 36px;
+            height: 36px;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .refresh-btn:hover {
+            background-color: #138496;
         }
     </style>
 </head>
@@ -1282,6 +1453,30 @@
                     readonly
                 >
             </div>
+            
+            <!-- 添加参数集选择下拉框 -->
+            <div class="form-group">
+                <label for="paramsSelect">参数集</label>
+                <div class="params-select-container">
+                    <select id="paramsSelect" class="params-select">
+                        <option value="">-- 选择已保存的参数集 --</option>
+                    </select>
+                    <button type="button" class="refresh-btn" onclick="loadBatchParams()">
+                        <span>🔄</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 添加参数集名称输入框 -->
+            <div class="form-group">
+                <label for="paramsName">参数集名称</label>
+                <input 
+                    type="text" 
+                    id="paramsName" 
+                    class="modal-form-input" 
+                    placeholder="输入参数集名称以保存"
+                >
+            </div>
 
             <div class="form-group">
                 <label for="batchApiItems">
@@ -1293,10 +1488,16 @@
                 </div>
             </div>
 
-            <button type="submit" class="execute-batch-btn">
-                <span class="btn-icon">▶</span>
-                <span class="btn-text">执行请求</span>
-            </button>
+            <div class="button-group">
+                <button type="button" class="save-params-btn" onclick="saveBatchParams()">
+                    <span class="btn-icon">💾</span>
+                    <span class="btn-text">保存参数</span>
+                </button>
+                <button type="submit" class="execute-batch-btn">
+                    <span class="btn-icon">▶</span>
+                    <span class="btn-text">执行请求</span>
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -1511,7 +1712,7 @@
             const scriptDataDiv = document.getElementById('scriptData');
             scriptDataDiv.innerHTML = ''; // 清空现有列表
             
-            // 重置加载更多按钮状态
+            // 重置加载更多按钮状态getBatchParams
             const loadMoreBtn = document.getElementById('loadMore');
             loadMoreBtn.disabled = false;
             loadMoreBtn.style.backgroundColor = ''; // 恢复默认背景色
@@ -1673,11 +1874,20 @@
     window.onclick = function(event) {
         const logModal = document.getElementById('logModal');
         const settingsModal = document.getElementById('settingsModal');
+        const apiModal = document.getElementById('apiModal');
+        const batchApiModal = document.getElementById('batchApiModal');
+        
         if (event.target == logModal) {
             logModal.style.display = 'none';
         }
         if (event.target == settingsModal) {
             settingsModal.style.display = 'none';
+        }
+        if (event.target == apiModal) {
+            closeApiModal();
+        }
+        if (event.target == batchApiModal) {
+            closeBatchApiModal();
         }
     }
 
@@ -2126,305 +2336,131 @@
         const itemsContainer = document.getElementById('batchApiItems');
         itemsContainer.innerHTML = '';
         addApiItem(scriptName);
+        
+        // 清空参数集名称
+        document.getElementById('paramsName').value = '';
+        
+        // 加载该脚本的参数集
+        loadBatchParams();
     }
-
-    // 关闭批量API模态框
-    function closeBatchApiModal() {
-        document.getElementById('batchApiModal').style.display = 'none';
-    }
-
-    const MAX_API_ITEMS = 5; // 定义最大请求项数量
-
-    function addApiItem(scriptName) {
-        const itemsContainer = document.getElementById('batchApiItems');
-
-        // 检查当前请求项数量
-        if (itemsContainer.children.length >= MAX_API_ITEMS) {
-            alert('最多只能添加3个请求项！');
+    
+    // 加载批量执行参数列表
+    async function loadBatchParams() {
+        const scriptName = document.getElementById('scriptName').value;
+        if (!scriptName) {
+            console.error('脚本名称为空');
             return;
         }
-
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'batch-api-item';
-
-        itemDiv.innerHTML = `
-            <textarea
-                class="batch-api-input"
-                placeholder='请输入请求参数例如:{"username": "ddzhao", "password": "123456"}...'
-            ></textarea>
-            <div class="batch-api-controls">
-                <button type="button" class="add-api-btn" onclick="addApiItem()">+</button>
-                <button type="button" class="remove-api-btn" onclick="removeApiItem(this)">-</button>
-            </div>
-        `;
-
-        itemsContainer.appendChild(itemDiv);
-
-        // 如果达到最大数量，禁用所有添加按钮
-        if (itemsContainer.children.length >= MAX_API_ITEMS) {
-            const addButtons = document.querySelectorAll('.add-api-btn');
-            addButtons.forEach(btn => {
-                btn.disabled = true;
-                btn.style.backgroundColor = '#ccc';
-                btn.style.cursor = 'not-allowed';
-            });
-        }
-    }
-
-    function removeApiItem(button) {
-        const itemsContainer = document.getElementById('batchApiItems');
-        if (itemsContainer.children.length > 1) {
-            button.closest('.batch-api-item').remove();
-
-            // 当删除后数量小于最大值时，重新启用所有添加按钮
-            if (itemsContainer.children.length < MAX_API_ITEMS) {
-                const addButtons = document.querySelectorAll('.add-api-btn');
-                addButtons.forEach(btn => {
-                    btn.disabled = false;
-                    btn.style.backgroundColor = '#28a745';
-                    btn.style.cursor = 'pointer';
-                });
+        
+        try {
+            // 添加更多日志来帮助调试
+            console.log('正在获取参数列表，脚本名称:', scriptName);
+            
+            // 确保URL编码正确
+            const encodedScriptName = encodeURIComponent(scriptName);
+            const url = `http://127.0.0.1:8000/api/getBatchParams?script_name=${encodedScriptName}`;
+            console.log('请求URL:', url);
+            
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP错误，状态码: ${response.status}`);
             }
-        } else {
-            alert('至少需要保留一个请求项！');
+            
+            const result = await response.json();
+            console.log('获取参数列表结果:', result);
+            
+            if (result.success) {
+                const paramsSelect = document.getElementById('paramsSelect');
+                // 保留第一个默认选项
+                paramsSelect.innerHTML = '<option value="">-- 选择已保存的参数集 --</option>';
+                
+                // 添加参数集选项
+                if (result.data && Array.isArray(result.data)) {
+                    result.data.forEach(param => {
+                        const option = document.createElement('option');
+                        option.value = param.id;
+                        option.textContent = param.params_name;
+                        option.dataset.params = param.params_data;
+                        paramsSelect.appendChild(option);
+                    });
+                } else {
+                    console.warn('返回的数据不是数组:', result.data);
+                }
+            } else {
+                console.error('加载参数集失败:', result.message);
+                alert(`加载参数集失败: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('加载参数集异常:', error);
+            alert(`加载参数集异常: ${error.message}`);
         }
     }
-
-    // 处理批量API请求表单提交
-    document.getElementById('batchApiForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const script_name = document.getElementById('scriptName').value;
+    
+    // 保存批量执行参数
+    async function saveBatchParams() {
+        const scriptName = document.getElementById('scriptName').value;
+        const paramsName = document.getElementById('paramsName').value.trim();
         const items = document.querySelectorAll('.batch-api-input');
+        
+        // 验证输入
+        if (!scriptName) {
+            alert('脚本名称不能为空');
+            return;
+        }
+        
+        if (!paramsName) {
+            alert('请输入参数集名称');
+            return;
+        }
+        
         const dataList = [];
-
+        
         // 收集所有请求项的数据
         for (const item of items) {
             try {
-                const jsonData = JSON.parse(item.value);
-                dataList.push(jsonData);
+                const itemValue = item.value.trim();
+                if (itemValue) {
+                    const jsonData = JSON.parse(itemValue);
+                    dataList.push(jsonData);
+                }
             } catch (error) {
                 alert('JSON格式错误，请检查输入！');
                 return;
             }
         }
-
+        
+        if (dataList.length === 0) {
+            alert('请至少添加一个有效的请求参数');
+            return;
+        }
+        
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/batchExecute', {
+            const response = await fetch('http://127.0.0.1:8000/api/saveBatchParams', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    name: script_name,
-                    data: JSON.stringify(dataList)
+                    script_name: scriptName,
+                    params_name: paramsName,
+                    params_data: JSON.stringify(dataList)
                 })
             });
-
+            
             const result = await response.json();
-
+            
             if (result.success) {
-                alert(`批量请求执行完成！\n${result.message}`);
-                // 显示详细结果
-                console.log('详细执行结果：', result.results);
+                alert(result.message);
+                // 重新加载参数集列表
+                loadBatchParams();
             } else {
-                alert(`批量请求失败：${result.message}`);
+                alert(`保存失败: ${result.message}`);
             }
-
-            closeBatchApiModal();
-
         } catch (error) {
-            alert('执行请求时发生错误：' + error.message);
-        }
-    });
-
-    // 查看内容功能
-    function viewContent(title, content) {
-        try {
-            const decodedContent = decodeURIComponent(content);
-
-            // 检查内容是否为空
-            if (!decodedContent) {
-                alert('当前数据为空，无法查看！');
-                return;
-            }
-
-            const modal = document.getElementById('viewContentModal');
-            const titleElement = document.getElementById('viewContentTitle');
-            const bodyElement = document.getElementById('viewContentBody');
-
-            titleElement.textContent = title;
-
-            // 尝试格式化 JSON
-            try {
-                const jsonContent = JSON.parse(decodedContent);
-                bodyElement.textContent = JSON.stringify(jsonContent, null, 2);
-            } catch {
-                // 如果不是 JSON，直接显示原文
-                bodyElement.textContent = decodedContent;
-            }
-
-            modal.style.display = 'flex';
-        } catch (error) {
-            console.error('查看内容失败:', error);
-            alert('查看内容失败');
+            console.error('保存参数失败:', error);
+            alert('保存参数时发生错误: ' + error.message);
         }
     }
-
-    function closeViewContentModal() {
-        document.getElementById('viewContentModal').style.display = 'none';
-    }
-
-    // 点击模态框外部关闭
-    window.onclick = function(event) {
-        const viewContentModal = document.getElementById('viewContentModal');
-        if (event.target == viewContentModal) {
-            viewContentModal.style.display = 'none';
-        }
-    }
-
-    // 新增生成脚本API文件按钮的点击事件
-    function validateApiFileName() {
-        const filenameInput = document.querySelector('input[name="filename"]');
-        const filename = filenameInput.value.trim();
-
-        if (!filename.endsWith('_api_test_')) {
-            alert('脚本名称必须以 "_api_test_" 结尾');
-            return;
-        }
-
-        // 如果验证通过，继续执行生成API文件的逻辑
-        generateApiFile();
-    }
-
-    function generateApiFile2() {
-        const formData = new FormData(document.getElementById('uploadForm'));
-
-        fetch('http://127.0.0.1:8000/api/upload', {
-            method: 'POST',
-            body: formData
-        })
-            .then(response => {
-                if (response.ok) {
-                    alert('API文件生成成功！');
-                    loadScripts(true);
-                } else {
-                    alert('API文件生成失败，请检查输入。');
-                }
-            });
-    }
-
-    function generateApiFile() {
-        const formData = new FormData(document.getElementById('uploadForm'));
-        formData.append('fileType', 1); // 添加额外参数
-
-        fetch('http://127.0.0.1:8000/api/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (response.ok) {
-                alert('API文件生成成功！');
-                loadScripts(true);
-            } else {
-                alert('API文件生成失败，请检查输入。');
-            }
-        });
-    }
-
-    // 校验文件名称
-    function validateFilename(input) {
-        const value = input.value;
-        const errorMessage = document.getElementById('filenameError');
-
-        if (value && !value.endsWith('test_')) {
-            errorMessage.textContent = '文件名称必须以 "test_" 结尾';
-        } else {
-            errorMessage.textContent = '';
-        }
-    }
-
-    function validateFilenameBeforeSubmit() {
-        const filenameInput = document.querySelector('input[name="filename"]');
-        const filename = filenameInput.value.trim();
-
-        if (!filename.endsWith('test_')) {
-            alert('脚本名称必须以 "test_" 结尾');
-            return false; // 阻止表单提交
-        }
-
-        generateApiFile2()
-        // 如果验证通过，提交表单
-        // document.getElementById('uploadForm').submit();
-    }
-
-    // 新增打开设置模态框的函数
-    function openHttpSettings(scriptName, url) {
-        document.getElementById('httpScriptName').value = scriptName;
-        document.getElementById('httpUrl').value = url;
-
-        // 请求设置接口
-        fetch('http://127.0.0.1:8000/api/queryHttpSettingInfo', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ script_name: scriptName, url: url })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.setting) {
-                document.getElementById('httpUrl').value = data.setting.url;
-                document.getElementById('assertType').value = data.setting.assert_type;
-                document.getElementById('ruleType').value = data.setting.rule_type;
-                document.getElementById('assertBodyType').value = data.setting.assert_body_type;
-                document.getElementById('checkInfo').value = data.setting.check_info;
-            }
-            document.getElementById('httpSettingsModal').style.display = 'flex';
-        })
-        .catch(error => {
-            console.error('获取设置失败:', error);
-            alert('获取设置失败，请检查控制台。');
-        });
-    }
-
-    // 新增关闭设置模态框的函数
-    function closeHttpSettingsModal() {
-        document.getElementById('httpSettingsModal').style.display = 'none';
-    }
-
-    // 新增处理设置表单提交的函数
-    document.getElementById('httpSettingsForm').onsubmit = async function(e) {
-        e.preventDefault();
-        const data = {
-            script_name: document.getElementById('httpScriptName').value,
-            url: document.getElementById('httpUrl').value,
-            assert_type: document.getElementById('assertType').value,
-            rule_type: document.getElementById('ruleType').value,
-            assert_body_type: document.getElementById('assertBodyType').value,
-            check_info: document.getElementById('checkInfo').value
-        };
-
-        try {
-            const response = await fetch('http://127.0.0.1:8000/api/updateHttpSettingInfo', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            });
-
-            if (!response.ok) {
-                throw new Error('更新失败');
-            }
-
-            alert('更新成功！');
-            closeHttpSettingsModal();
-        } catch (error) {
-            console.error('更新设置失败:', error);
-            alert('更新失败，请检查控制台。');
-        }
-    };
 
     // 添加删除确认函数
     function confirmDelete(scriptId, scriptName) {
@@ -2471,6 +2507,156 @@
             specifiedTimeGroup.style.display = 'none';
             cycleTimeGroup.style.display = 'block';
         }
+    }
+
+    // 处理批量API请求表单提交
+    document.addEventListener('DOMContentLoaded', function() {
+        // 监听参数集选择变化
+        document.getElementById('paramsSelect').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                try {
+                    // 获取参数数据并填充到请求项中
+                    const paramsData = JSON.parse(selectedOption.dataset.params);
+                    
+                    // 清空现有请求项
+                    const itemsContainer = document.getElementById('batchApiItems');
+                    itemsContainer.innerHTML = '';
+                    
+                    // 填充参数数据
+                    paramsData.forEach((param, index) => {
+                        if (index > 0) {
+                            addApiItem(); // 添加额外的请求项
+                        } else {
+                            addApiItem(); // 添加第一个请求项
+                        }
+                    });
+                    
+                    // 设置参数值
+                    const inputElements = document.querySelectorAll('.batch-api-input');
+                    paramsData.forEach((param, index) => {
+                        if (index < inputElements.length) {
+                            inputElements[index].value = JSON.stringify(param, null, 2);
+                        }
+                    });
+                    
+                    // 设置参数集名称
+                    document.getElementById('paramsName').value = selectedOption.textContent;
+                    
+                } catch (error) {
+                    console.error('解析参数数据失败:', error);
+                    alert('加载参数数据失败');
+                }
+            }
+        });
+    });
+
+    // 处理批量API请求表单提交
+    function closeBatchApiModal() {
+        document.getElementById('batchApiModal').style.display = 'none';
+    }
+
+    // 添加API请求项
+    function addApiItem() {
+        const itemsContainer = document.getElementById('batchApiItems');
+        const newItem = document.createElement('div');
+        newItem.className = 'batch-api-item';
+        newItem.innerHTML = `
+            <textarea class="batch-api-input" placeholder='{"key": "value"}'></textarea>
+            <div class="batch-api-controls">
+                <button type="button" class="add-api-btn" onclick="addApiItem()">+</button>
+                <button type="button" class="remove-api-btn" onclick="removeApiItem(this)">-</button>
+            </div>
+        `;
+        itemsContainer.appendChild(newItem);
+    }
+
+    // 移除API请求项
+    function removeApiItem(button) {
+        const items = document.querySelectorAll('.batch-api-item');
+        if (items.length > 1) {
+            button.closest('.batch-api-item').remove();
+        } else {
+            alert('至少需要保留一个请求项');
+        }
+    }
+
+    // 处理批量API请求表单提交
+    document.getElementById('batchApiForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const scriptName = document.getElementById('scriptName').value;
+        const items = document.querySelectorAll('.batch-api-input');
+        const dataList = [];
+        
+        // 收集所有请求项的数据
+        for (const item of items) {
+            try {
+                const itemValue = item.value.trim();
+                if (itemValue) {
+                    const jsonData = JSON.parse(itemValue);
+                    dataList.push(jsonData);
+                }
+            } catch (error) {
+                alert('JSON格式错误，请检查输入！');
+                return;
+            }
+        }
+        
+        if (dataList.length === 0) {
+            alert('请至少添加一个有效的请求参数');
+            return;
+        }
+        
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/batchExecute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    script_name: scriptName,
+                    data_list: dataList
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(result.message);
+                closeBatchApiModal();
+            } else {
+                alert(`执行失败: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('批量执行失败:', error);
+            alert('批量执行时发生错误: ' + error.message);
+        }
+    });
+
+    // 关闭查看内容模态框
+    function closeViewContentModal() {
+        document.getElementById('viewContentModal').style.display = 'none';
+    }
+
+    // 查看内容
+    function viewContent(title, content) {
+        const decodedContent = decodeURIComponent(content);
+        document.getElementById('viewContentTitle').textContent = title;
+        document.getElementById('viewContentBody').textContent = decodedContent;
+        document.getElementById('viewContentModal').style.display = 'flex';
+    }
+
+    // 关闭HTTP设置模态框
+    function closeHttpSettingsModal() {
+        document.getElementById('httpSettingsModal').style.display = 'none';
+    }
+
+    // 打开HTTP设置模态框
+    function openHttpSettings(scriptName, url) {
+        document.getElementById('httpScriptName').value = scriptName;
+        document.getElementById('httpUrl').value = url;
+        document.getElementById('httpSettingsModal').style.display = 'flex';
     }
 </script>
 </body>
