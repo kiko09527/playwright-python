@@ -598,7 +598,8 @@ async def batchExecute(request: Request):
         if not isinstance(data_list, list):
             return create_response(False, "batchExecute|数据格式错误，需要提供JSON数组", None)
         logger.info(f"batchExecute|本次一共{len(data_list)}个请求")
-        script_path = os.path.join(current_directory, name)
+        # 使用os.path.normpath来规范化路径，处理不同操作系统的路径分隔符
+        script_path = os.path.normpath(os.path.join(current_directory, name))
         # 检查文件是否存在
         if not os.path.isfile(script_path):
             logger.error(f"batchExecute|文件不存在")
@@ -613,14 +614,27 @@ async def batchExecute(request: Request):
                 totalCount = len(data_list)
                 # 将 保存日志
                 log_id = save_script_log(name, json.dumps(data_item), "API", "正在执行..", "脚本正在执行,请耐心等候")  # 保存日志
+                
+                # 使用sys.executable确保使用正确的Python解释器路径
+                python_executable = sys.executable
+                
                 # 将 data_item 转换为字符串
-                command = [
-                    "python", script_path,
-                    json.dumps(data_item)  # 转换为字符串以传递
-                ]
+                data_json_str = json.dumps(data_item)
+                
+                # Windows系统需要特殊处理
+                if sys.platform == 'win32':
+                    # 在Windows上，命令行参数中的引号需要特殊处理
+                    # 使用subprocess.list2cmdline可以正确处理命令行参数
+                    command = [python_executable, script_path, data_json_str]
+                    shell = True
+                else:
+                    command = [python_executable, script_path, data_json_str]
+                    shell = False
+                
                 logger.info(f"batchExecute|执行命令: {command}")  # 记录执行的命令
+                
                 # 使用subprocess运行外部python脚本
-                result = subprocess.run(command, capture_output=True, text=True, check=True)
+                result = subprocess.run(command, capture_output=True, text=True, check=True, shell=shell)
                 logger.info(f"batchExecute|命令输出: {result.stdout.strip()}")  # 记录命令输出
                 output = result.stdout.strip()
                 logger.info(f"batchExecute|执行成功{output}")
