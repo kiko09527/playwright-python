@@ -1,40 +1,41 @@
-import os
 import json
 import logging
 import os
 import sys
 import uuid
+
+from playwright.sync_api import Playwright, sync_playwright
+
 from http_info import setup_page
-from playwright.sync_api import Playwright, sync_playwright, expect
 
 
-def run(playwright: Playwright,data) -> None:
+def run(playwright: Playwright, data) -> None:
     try:
         logging.info(f"sync_playwright|内部接收到的参数 data:{data}")
         username = data.get("username")
         password = data.get("password")
         logging.info(f"sync_playwright|解析出的参数: username={username}, password={password}")
-
         browser = playwright.chromium.launch(headless=False)
         context = browser.new_context()
         context.tracing.start(screenshots=True, snapshots=True, sources=True)
         page = context.new_page()
         current_file_name = os.path.basename(__file__)
-        uuid_code =str(uuid.uuid1())
+        current_file_name
+        uuid_code = str(uuid.uuid1())
         print(f"确定:current_file_name: {current_file_name}")
-        setup_page(page,current_file_name,uuid_code)
-        page.on("popup", lambda p: setup_page(p,current_file_name,uuid_code))
+        setup_page(page, current_file_name, uuid_code)
+        page.on("popup", lambda p: setup_page(p, current_file_name, uuid_code))
 
         page.goto("https://sso-uat.gaojihealth.cn/login/#/")
 
         page.get_by_role("textbox", name="请输入工号/移动电话").click()
-        page.get_by_role("textbox", name="请输入工号/移动电话").fill("13581791523")
+        page.get_by_role("textbox", name="请输入工号/移动电话").fill(username)
         page.get_by_role("textbox", name="请输入密码").dblclick()
-        page.get_by_role("textbox", name="请输入密码").fill("Xifan@1007")
+        page.get_by_role("textbox", name="请输入密码").fill(username)
         page.get_by_role("button", name="登录").click()
         page.locator("div:nth-child(6) > img").click()
         with page.expect_popup() as page1_info:
-            page.get_by_role("listitem").filter(has_text="13581791523").click()
+            page.get_by_role("listitem").filter(has_text="").click()
         page1 = page1_info.value
         page1.get_by_role("button", name="积分商城连锁").click()
         page1.get_by_text("会员管理").click()
@@ -48,15 +49,9 @@ def run(playwright: Playwright,data) -> None:
         page1.get_by_role("textbox", name="* 任务名称:").fill("RPA创建精准营销")
         page1.get_by_text("请选择分组").click()
         page1.get_by_role("option", name="默认分组").click()
-        page1.get_by_role('button', name='图标: plus 选择人群').click()
-        page1.get_by_role('cell', name='高济精准营销任务1人群包').click()
-        page1.get_by_role('textbox', name='输入人群名称').click()
-        page1.get_by_role('textbox', name='输入人群名称').fill('高济精准营销任务1')
-        page1.get_by_role('button', name='搜索').click()
-        page1.get_by_role('cell', name='高济精准营销任务1人群包').click()
-        page1.get_by_role('button', name='确定').click()
-        page1.get_by_label('', exact=True).check()
-        page1.get_by_role('button', name='确定').click()
+        page1.get_by_role("button", name="图标: plus 选择人群").click()
+        page1.get_by_role("row", name="会员等级测试项目1人群包").get_by_label("").check()
+        page1.get_by_role("button", name="确定").click()
         page1.get_by_text("请选择任务类型").click()
         page1.get_by_role("option", name="慢病随访").click()
         page1.get_by_role("spinbutton", name="* 统计天数 图标: question-circle :").click()
@@ -90,7 +85,7 @@ def run(playwright: Playwright,data) -> None:
         # 等待一段时间以确保请求完成
         page1.wait_for_timeout(5000)
     finally:
-        context.tracing.stop(path='精准营销慢病任务通知_api_test_.zip')
+        context.tracing.stop(path='精准营销创建.zip')
         context.close()
         browser.close()
 

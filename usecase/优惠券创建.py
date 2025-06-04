@@ -9,13 +9,13 @@ def run(playwright: Playwright) -> None:
         page = context.new_page()
         page.goto("https://sso-uat.gaojihealth.cn/login/#/")
         page.get_by_role("textbox", name="请输入工号/移动电话").click()
-        page.get_by_role("textbox", name="请输入工号/移动电话").fill("13581791523")
+        page.get_by_role("textbox", name="请输入工号/移动电话").fill("")
         page.get_by_role("textbox", name="请输入密码").dblclick()
-        page.get_by_role("textbox", name="请输入密码").fill("Xifan@1007")
+        page.get_by_role("textbox", name="请输入密码").fill("")
         page.get_by_role("button", name="登录").click()
         page.locator("div:nth-child(6) > img").click()
         with page.expect_popup() as page1_info:
-            page.get_by_role("listitem").filter(has_text="13581791523").click()
+            page.get_by_role("listitem").filter(has_text="").click()
         page1 = page1_info.value
         page1.get_by_role("button", name="积分商城连锁").click()
         page1.locator("div").filter(has_text=re.compile(r"^营销管理$")).click()

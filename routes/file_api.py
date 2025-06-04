@@ -251,6 +251,23 @@ def upload_code(filename: str = Form(...), code: str = Form(...), fileType: str 
         logger.warning(f"upload_code|代码补充")
         modified_code = code  # 如果fileType是1,则直接使用code
 
+    # 处理生成登录信息和引用登录信息的选项
+    if genLogin:
+        logger.info(f"upload_code|需要生成登录信息")
+        # 在代码中添加生成登录信息的代码
+        modified_code = modified_code.replace(
+            "context.close()",
+            "context.close()\n        context.storage_state(path=\"login_state.json\")"
+        )
+
+    if useLogin:
+        logger.info(f"upload_code|需要引用登录信息")
+        # 在代码中添加引用登录信息的代码
+        modified_code = modified_code.replace(
+            "context = browser.new_context()",
+            "context = browser.new_context(storage_state=\"login_state.json\")"
+        )
+
     # 生成完整文件路径，使用normpath确保跨平台兼容性
     file_path = os.path.normpath(os.path.join(UPLOAD_FOLDER, filename))
 

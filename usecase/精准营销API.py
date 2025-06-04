@@ -1,41 +1,56 @@
-import json
-import logging
-import os
-import sys
-import uuid
+import re
+from fastapi import FastAPI
+from playwright.sync_api import sync_playwright
 
-from playwright.sync_api import Playwright, sync_playwright
+app = FastAPI()
 
-from http_info import setup_page
-
-
-def run(playwright: Playwright, data) -> None:
-    try:
-        logging.info(f"sync_playwright|内部接收到的参数 data:{data}")
-        username = data.get("username")
-        password = data.get("password")
-        logging.info(f"sync_playwright|解析出的参数: username={username}, password={password}")
+@app.get("/run-playwright")
+def run_playwright():
+    def run(playwright: Playwright) -> None:
+        # 定义运行 Playwright 的函数
         browser = playwright.chromium.launch(headless=False)
         context = browser.new_context()
-        context.tracing.start(screenshots=True, snapshots=True, sources=True)
+        # 存储请求和响应
+        requests = []
+        responses = []
+
+        # 监听请求事件
+        def log_request(request):
+            if "api-store-test.gaojihealth.cn" in request.url:
+                requests.append({
+                    "url": request.url,            # 请求的 URL
+                    "method": request.method,      # 请求方法（GET, POST等）
+                    "post_data": request.post_data,    # POST 数据（如果有的话）
+                    "headers": request.headers,    # 请求头
+                })
+                print(f"Request URL: {request.url}")
+
+        def log_response(response):
+            if "api-store-test.gaojihealth.cn" in response.url:
+                responses.append({
+                    "url": response.url,
+                    "status": response.status,
+                    "body": response.body()
+                })
+                print(f"Response URL: {response.url}")
+        # 创建新页面并绑定监听器
+        def setup_page(page):
+            page.on("request", log_request)
+            page.on("response", log_response)
         page = context.new_page()
-        current_file_name = os.path.basename(__file__)
-        current_file_name
-        uuid_code = str(uuid.uuid1())
-        print(f"确定:current_file_name: {current_file_name}")
-        setup_page(page, current_file_name, uuid_code)
-        page.on("popup", lambda p: setup_page(p, current_file_name, uuid_code))
+        setup_page(page)
+        page.on("popup", lambda p: setup_page(p))
 
         page.goto("https://sso-uat.gaojihealth.cn/login/#/")
 
         page.get_by_role("textbox", name="请输入工号/移动电话").click()
-        page.get_by_role("textbox", name="请输入工号/移动电话").fill(username)
+        page.get_by_role("textbox", name="请输入工号/移动电话").fill("")
         page.get_by_role("textbox", name="请输入密码").dblclick()
-        page.get_by_role("textbox", name="请输入密码").fill(username)
+        page.get_by_role("textbox", name="请输入密码").fill("")
         page.get_by_role("button", name="登录").click()
         page.locator("div:nth-child(6) > img").click()
         with page.expect_popup() as page1_info:
-            page.get_by_role("listitem").filter(has_text="13581791523").click()
+            page.get_by_role("listitem").filter(has_text="").click()
         page1 = page1_info.value
         page1.get_by_role("button", name="积分商城连锁").click()
         page1.get_by_text("会员管理").click()
@@ -46,11 +61,11 @@ def run(playwright: Playwright, data) -> None:
         page1.get_by_role("heading", name="小程序外消息类触达").click()
         page1.get_by_role("button", name="创 建").click()
         page1.get_by_role("textbox", name="* 任务名称:").click()
-        page1.get_by_role("textbox", name="* 任务名称:").fill("RPA创建精准营销")
+        page1.get_by_role("textbox", name="* 任务名称:").fill("自动化测试001")
         page1.get_by_text("请选择分组").click()
         page1.get_by_role("option", name="默认分组").click()
         page1.get_by_role("button", name="图标: plus 选择人群").click()
-        page1.get_by_role("row", name="会员等级测试项目1人群包").get_by_label("").check()
+        page1.get_by_role("row", name="高济测试人群包2025-02-15 13:20:20 - -").get_by_label("").check()
         page1.get_by_role("button", name="确定").click()
         page1.get_by_text("请选择任务类型").click()
         page1.get_by_role("option", name="慢病随访").click()
@@ -59,6 +74,12 @@ def run(playwright: Playwright, data) -> None:
         page1.get_by_role("radio", name="手动定时运营").check()
         page1.get_by_role("radio", name="审核后立即发送").check()
         page1.get_by_role("button", name="图标: edit 查看维系渠道及内容").click()
+
+        # page1.get_by_text("发短信").click()
+        # page1.get_by_role("button", name="图标: plus 选择短信模板").click()
+        # page1.get_by_role("row", name="大促活动 审核通过 2025-02-08 15:57:19").get_by_label("").check()
+        # page1.get_by_label("选择短信模板").get_by_role("button", name="确定").click()
+        # page1.get_by_role("button", name="确定").click()
 
         page1.get_by_text("发图文").click()
         page1.get_by_role("row", name="五一调休，本周日上班 2023-11-29 16:25:").get_by_label("").check()
@@ -84,17 +105,25 @@ def run(playwright: Playwright, data) -> None:
 
         # 等待一段时间以确保请求完成
         page1.wait_for_timeout(5000)
-    finally:
-        context.tracing.stop(path='精准营销创建.zip')
+        # 打印请求和响应信息
+        print("\n--- Summary of Requests ---")
+        # for req in requests:
+        #     print(req)
+        #
+        # print("\n--- Summary of Responses ---")
+        # for resp in responses:
+        #     # 注意：如果body是bytes，需进行解码
+        #     if isinstance(resp["body"], bytes):
+        #         print(f"Response URL: {resp['url']}, Status: {resp['status']}, Body: {resp['body'].decode('utf-8')}")
+        #     else:
+        #         print(f"Response URL: {resp['url']}, Status: {resp['status']}, Body: {resp['body']}")
+        # ---------------------
         context.close()
         browser.close()
 
+        with sync_playwright() as playwright:
+            run(playwright)
 
-with sync_playwright() as playwright:
-    try:
-        json_string = sys.argv[1]
-        request_data = json.loads(json_string)
-    except Exception as e:
-        logging.error(f"sync_playwright|JSON解析失败: {str(e)}")
-        sys.exit(1)  # 返回非零状态码，表示失败
-    run(playwright, request_data)
+    return {"message": "Playwright run completed."}
+
+# 启动服务
