@@ -1,4 +1,4 @@
-db_config = {
+db_config1 = {
     'host': 'common_01_test_ms_mysql.gaojihealth.cn',  # 数据库主机
     'user': 'scrmrw',  # 数据库用户名
     'password': '123qaz!@#',  # 数据库密码
