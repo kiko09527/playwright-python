@@ -93,3 +93,15 @@ CREATE TABLE `script_info` (
 ) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=latin1;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+DROP TABLE IF EXISTS `batch_execute_params`;
+CREATE TABLE `batch_execute_params` (
+                                        `id` bigint(20) NOT NULL AUTO_INCREMENT,
+                                        `script_name` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL COMMENT '脚本名称',
+                                        `params_name` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL COMMENT '参数集名称',
+                                        `params_data` longtext CHARACTER SET utf8mb4 COMMENT '参数数据JSON',
+                                        `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+                                        `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                        PRIMARY KEY (`id`),
+                                        KEY `idx_script_name` (`script_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='批量执行参数表';
