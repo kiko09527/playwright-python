@@ -227,8 +227,8 @@ def run_pytest(trace: str):
 
 
 @app.post("/upload", summary="生成脚本文件")
-def upload_code(filename: str = Form(...), code: str = Form(...), fileType: str = Form(None)):
-    logger.info(f"upload_code|请求参数 filename:{filename},code:{code},fileType:{fileType}")
+def upload_code(filename: str = Form(...), code: str = Form(...), fileType: str = Form(None), genLogin: str = Form(None), useLogin: str = Form(None)):
+    logger.info(f"upload_code|请求参数 filename:{filename},code:{code},fileType:{fileType},genLogin:{genLogin},useLogin:{useLogin}")
     # 根据 fileType 修改文件名逻辑
     if not filename.endswith('.py'):
         filename += '.py'  # 自动添加 '.py' 后缀
@@ -245,6 +245,7 @@ def upload_code(filename: str = Form(...), code: str = Form(...), fileType: str 
     # 判断 fileType 是否存在并且等于 1
     if not (fileType is not None and fileType == "1"):
         logger.warning(f"upload_code|原始文件")
+        # 传递新增的登录信息参数
         modified_code = genera_python_code.modify_code(code, filename)
     else:
         logger.warning(f"upload_code|代码补充")
