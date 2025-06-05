@@ -63,3 +63,4 @@ wrapt==1.17.2
 zipp==3.21.0
 zope.interface==7.2
 schedule==1.2.2
+scrapy==2.13.1
